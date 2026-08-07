@@ -267,3 +267,108 @@ footer {
         font-size: 1.8rem;
     }
 }
+/* =========================================
+   CART SLIDER STYLES
+   ========================================= */
+
+/* Dark transparent background behind the cart */
+.cart-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 1001;
+    display: none; /* Hidden by default */
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.cart-overlay.active {
+    display: block;
+    opacity: 1;
+}
+
+/* The actual slider drawer */
+.cart-slider {
+    position: fixed;
+    top: 0;
+    right: -450px; /* Hidden off-screen to the right */
+    width: 100%;
+    max-width: 400px; /* How wide the cart is */
+    height: 100vh;
+    background-color: #f2ebe1;
+    box-shadow: -5px 0 15px rgba(0,0,0,0.2);
+    z-index: 1002;
+    transition: right 0.3s ease; /* The sliding animation */
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    overflow-y: auto; /* Allow scrolling if many items */
+}
+
+/* Class added by Javascript to open the cart */
+.cart-slider.open {
+    right: 0; 
+}
+
+.cart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid #7b2c22;
+    padding-bottom: 15px;
+    margin-bottom: 20px;
+}
+
+.cart-header h2 {
+    color: #7b2c22;
+    font-size: 1.5rem;
+    margin: 0;
+}
+
+.close-cart-btn {
+    background: none;
+    border: none;
+    font-size: 2rem;
+    color: #2c221e;
+    cursor: pointer;
+    line-height: 1;
+}
+
+.close-cart-btn:hover {
+    color: #7b2c22;
+}
+
+/* Fix cart items for the slider format */
+#cart-items {
+    flex-grow: 1;
+    background: transparent;
+    padding: 0;
+    margin: 0;
+}
+
+.cart-row {
+    background: white;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    border: none;
+}
+
+#cart-total {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    margin-top: 20px;
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+}
+
+.checkout-btn {
+    width: 100%;
+    margin-top: 15px;
+}
