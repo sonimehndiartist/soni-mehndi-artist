@@ -51,7 +51,6 @@
             <button id="register-submit-btn" class="btn" style="width: 100%; margin-bottom: 10px;">Submit Registration</button>
             <p id="register-message" class="error-msg"></p>
 
-            <!-- NEW: Already Have Account Button -->
             <button id="back-to-login-btn" class="btn alt-btn" style="width: 100%; margin-top: 10px;">Already have an account?</button>
         </div>
     </div>
@@ -68,15 +67,24 @@
         </div>
     </div>
 
-    <header>
-        <div></div> 
-        <div class="logo">Soni Mehndi Artist</div>
+    <!-- SEPARATE BRAND BANNER -->
+    <div class="brand-banner">
+        <h1 class="logo">Soni Mehndi Artist</h1>
+    </div>
+
+    <!-- STICKY NAVIGATION BAR (HOME, SHOP, LOGIN, CART) -->
+    <header class="sticky-nav">
         <nav>
             <ul>
                 <li><a href="#home">Home</a></li>
                 <li><a href="#shop">Shop</a></li>
                 <li><a href="#login" id="login-link">Login</a></li>
-                <li><a href="#cart" id="cart-link">Cart (<span id="cart-count">0</span>)</a></li>
+                <li>
+                    <a href="#cart" id="cart-link" class="cart-nav-item">
+                        Cart 
+                        <span id="cart-badge" class="cart-badge">0</span>
+                    </a>
+                </li>
             </ul>
         </nav>
     </header>

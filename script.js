@@ -2,7 +2,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let cart = [];
     let loggedInMobile = null; 
 
-    // --- LOGIN LOGIC ---
+    // --- LOGIN & REGISTER LOGIC ---
     const loginLink = document.getElementById('login-link');
     const loginModal = document.getElementById('login-modal');
     const closeLoginBtn = document.getElementById('close-login-btn');
@@ -31,7 +31,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const logoutBtn = document.getElementById('logout-btn');
     const profileMobileDisplay = document.getElementById('profile-mobile-display');
 
-    // Open Login Modal via Navigation
     loginLink.addEventListener('click', (e) => {
         e.preventDefault();
         if (loggedInMobile) {
@@ -52,7 +51,6 @@ document.addEventListener('DOMContentLoaded', () => {
         profileModal.classList.remove('active');
     });
 
-    // Open Register Modal from Login Modal
     openRegisterBtn.addEventListener('click', () => {
         loginModal.classList.remove('active');
         loginMessage.textContent = '';
@@ -65,7 +63,6 @@ document.addEventListener('DOMContentLoaded', () => {
         registerMessage.textContent = '';
     });
 
-    // Go back to login from register modal
     backToLoginBtn.addEventListener('click', () => {
         registerModal.classList.remove('active');
         registerMessage.textContent = '';
@@ -73,7 +70,6 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => mobileInput.focus(), 100);
     });
 
-    // Enter Key Submissions for Login
     [mobileInput, passwordInput].forEach(input => {
         if(input) {
             input.addEventListener('keypress', (e) => {
@@ -82,7 +78,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Login Submit
     authSubmitBtn.addEventListener('click', () => {
         const mobile = mobileInput.value.trim();
         const pass = passwordInput.value.trim();
@@ -106,7 +101,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Register Submit
     registerSubmitBtn.addEventListener('click', () => {
         const mobile = regMobileInput.value.trim();
         const pass = regPasswordInput.value.trim();
@@ -119,12 +113,10 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // Successful registration automatically logs them in
         loggedInMobile = mobile;
         registerModal.classList.remove('active');
         loginLink.textContent = loggedInMobile;
 
-        // Clear register inputs
         regMobileInput.value = '';
         regPasswordInput.value = '';
         regAddressInput.value = '';
@@ -135,7 +127,6 @@ document.addEventListener('DOMContentLoaded', () => {
         alert('Registration successful! You are now logged in.');
     });
 
-    // Handle Logout
     logoutBtn.addEventListener('click', () => {
         loggedInMobile = null;
         loginLink.textContent = 'Login';
@@ -145,7 +136,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // --- CART LOGIC ---
-    const cartCountSpan = document.getElementById('cart-count');
+    const cartBadge = document.getElementById('cart-badge');
     const cartLink = document.getElementById('cart-link');
     const cartSlider = document.getElementById('cart-slider');
     const cartOverlay = document.getElementById('cart-overlay');
@@ -197,7 +188,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function updateAllUI() {
         const totalCount = cart.reduce((sum, item) => sum + item.quantity, 0);
-        cartCountSpan.textContent = totalCount;
+        
+        cartBadge.textContent = totalCount;
+        if (totalCount > 0) {
+            cartBadge.style.display = 'flex';
+        } else {
+            cartBadge.style.display = 'none';
+        }
 
         const productActionAreas = document.querySelectorAll('.product-actions');
         productActionAreas.forEach(area => {
@@ -254,6 +251,8 @@ document.addEventListener('DOMContentLoaded', () => {
         totalAmountSpan.textContent = totalPrice;
         cartTotalDiv.style.display = 'block';
     }
+
+    cartBadge.style.display = 'none';
 
     // --- CHECKOUT LOGIC ---
     const checkoutBtn = document.querySelector('.checkout-btn');

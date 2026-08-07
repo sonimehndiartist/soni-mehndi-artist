@@ -6,7 +6,7 @@ body { background-color: #faf7f2; color: #2c221e; line-height: 1.6; }
 /* Modals */
 .modal-overlay {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: #4a2e2bd4; z-index: 2000; display: none; 
+    background: rgba(74, 46, 43, 0.83); z-index: 2000; display: none; 
     align-items: center; justify-content: center;
 }
 .modal-overlay.active { display: flex; }
@@ -43,20 +43,79 @@ body { background-color: #faf7f2; color: #2c221e; line-height: 1.6; }
 .alt-btn:hover { background-color: #e6ccb8; color: #5a1f18; }
 #logout-btn:hover { background-color: #9c1010 !important; }
 
-/* Header & Nav */
-header {
-    background-color: #7b2c22; color: white; padding: 1rem 5%;
-    display: grid; grid-template-columns: 1fr auto 1fr; align-items: center;
-    position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+/* BRAND BANNER (SONI MEHNDI ARTIST) */
+.brand-banner {
+    background-color: #5a1f18;
+    color: white;
+    text-align: center;
+    padding: 1.5rem 1rem 1rem 1rem;
+    border-bottom: 1px solid #7b2c22;
 }
-header .logo { 
-    font-family: 'Great Vibes', cursive; font-size: 3.8rem; font-weight: normal; 
-    letter-spacing: 2px; color: white; justify-self: center; text-align: center; line-height: 1.2; padding: 0 20px;
+
+.brand-banner .logo { 
+    font-family: 'Great Vibes', cursive; 
+    font-size: 4.2rem; 
+    font-weight: normal; 
+    letter-spacing: 2px;
+    color: white; 
+    line-height: 1;
 }
-nav { justify-self: end; }
-header ul { list-style: none; display: flex; gap: 2rem; }
-header a { color: white; text-decoration: none; font-weight: 500; transition: color 0.2s; }
-header a:hover { color: #f4d06f; }
+
+/* STICKY NAVIGATION BAR */
+header.sticky-nav {
+    background-color: #7b2c22;
+    padding: 0.8rem 5%;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+header.sticky-nav nav ul { 
+    list-style: none; 
+    display: flex; 
+    gap: 3rem; 
+    align-items: center;
+}
+
+header.sticky-nav a { 
+    color: white; 
+    text-decoration: none; 
+    font-weight: 600; 
+    font-size: 1.1rem;
+    transition: color 0.2s; 
+}
+
+header.sticky-nav a:hover { 
+    color: #f4d06f; 
+}
+
+/* CART BADGE STYLING */
+.cart-nav-item {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+}
+
+.cart-badge {
+    position: absolute;
+    top: -10px;
+    right: -18px;
+    background-color: #ff3b30;
+    color: white;
+    font-size: 0.75rem;
+    font-weight: bold;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+}
 
 /* Hero Section */
 .hero { background-color: #4a2e2b; color: white; padding: 120px 5%; text-align: center; }
@@ -124,14 +183,15 @@ footer { background-color: #2c221e; color: #e6dfd5; text-align: center; padding:
 
 /* Responsive */
 @media (max-width: 900px) { 
+    .brand-banner .logo { font-size: 3.2rem; }
+    header.sticky-nav nav ul { gap: 1.5rem; }
     .product-grid { gap: 20px; } 
     .product-card { width: 45%; } 
-    header { display: flex; flex-direction: column; padding: 1rem; gap: 15px; text-align: center; }
-    header .logo { font-size: 3.2rem; padding: 10px 0; }
-    nav { width: 100%; }
-    header ul { gap: 1rem; flex-wrap: wrap; justify-content: center; width: 100%; }
 }
 @media (max-width: 600px) {
+    .brand-banner .logo { font-size: 2.8rem; }
+    header.sticky-nav nav ul { gap: 1rem; }
+    header.sticky-nav a { font-size: 0.95rem; }
     .hero { padding: 80px 5%; }
     .product-card { width: 100%; max-width: 350px; }
     .floating-whatsapp { width: 55px; height: 55px; bottom: 15px; right: 15px; }
