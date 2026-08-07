@@ -85,79 +85,9 @@
     }
 
     .tagline {
-      font-size: 1.1rem;
+      font-size: 1.15rem;
       color: var(--light-text);
-      margin-bottom: 2.5rem;
       line-height: 1.6;
-    }
-
-    /* Countdown Timer */
-    .countdown {
-      display: flex;
-      justify-content: center;
-      gap: 1.2rem;
-      margin-bottom: 2.5rem;
-    }
-
-    .time-box {
-      background: #ffffff;
-      border: 1px solid rgba(212, 175, 55, 0.4);
-      padding: 1rem 0.8rem;
-      border-radius: 8px;
-      min-width: 75px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
-    }
-
-    .time-box .number {
-      font-size: 1.8rem;
-      font-weight: 700;
-      color: var(--primary-green);
-      display: block;
-    }
-
-    .time-box .label {
-      font-size: 0.75rem;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      color: var(--light-text);
-    }
-
-    /* Subscription Form */
-    .subscribe-form {
-      display: flex;
-      gap: 0.5rem;
-      max-width: 450px;
-      margin: 0 auto;
-    }
-
-    .subscribe-form input[type="email"] {
-      flex: 1;
-      padding: 0.85rem 1.2rem;
-      border: 1px solid #ccc;
-      border-radius: 25px;
-      font-size: 0.95rem;
-      outline: none;
-      transition: border-color 0.3s ease;
-    }
-
-    .subscribe-form input[type="email"]:focus {
-      border-color: var(--warm-gold);
-    }
-
-    .subscribe-form button {
-      background-color: var(--primary-green);
-      color: #ffffff;
-      border: none;
-      padding: 0.85rem 1.8rem;
-      border-radius: 25px;
-      font-size: 0.95rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background-color 0.3s ease;
-    }
-
-    .subscribe-form button:hover {
-      background-color: var(--deep-forest);
     }
 
     footer {
@@ -170,11 +100,6 @@
     @media (max-width: 480px) {
       .main-title { font-size: 2.4rem; letter-spacing: 3px; }
       .sub-title { font-size: 1.1rem; letter-spacing: 2px; }
-      .countdown { gap: 0.5rem; }
-      .time-box { min-width: 60px; padding: 0.8rem 0.4rem; }
-      .time-box .number { font-size: 1.4rem; }
-      .subscribe-form { flex-direction: column; }
-      .subscribe-form button { width: 100%; }
     }
   </style>
 </head>
@@ -193,68 +118,11 @@
     <div class="sub-title">Mehndi Artist</div>
 
     <p class="tagline">We are crafting premium, 100% natural organic mehndi cones, essential oils, and henna kits for your special occasions. Coming soon!</p>
-
-    <!-- Countdown Timer -->
-    <div class="countdown">
-      <div class="time-box">
-        <span class="number" id="days">14</span>
-        <span class="label">Days</span>
-      </div>
-      <div class="time-box">
-        <span class="number" id="hours">08</span>
-        <span class="label">Hours</span>
-      </div>
-      <div class="time-box">
-        <span class="number" id="minutes">45</span>
-        <span class="label">Mins</span>
-      </div>
-      <div class="time-box">
-        <span class="number" id="seconds">30</span>
-        <span class="label">Secs</span>
-      </div>
-    </div>
-
-    <!-- Email Signup using FormSubmit -->
-    <!-- Email Signup using Web3Forms -->
-  <form class="subscribe-form" action="https://api.web3forms.com/submit" method="POST">
-  <!-- Paste your 36-character key between the quotes below -->
-  <input type="hidden" name="access_key" value="PASTE_YOUR_COPIED_KEY_HERE">
-  
-  <input type="email" name="email" placeholder="Enter your email for early access..." required>
-  <button type="submit">Notify Me</button>
-</form>
-    
   </div>
 
   <footer>
     <p>&copy; 2026 Soni Mehndi Artist. All rights reserved.</p>
   </footer>
-
-  <!-- Basic JavaScript for Live Countdown -->
-  <script>
-    // Target launch date (14 days from current time)
-    const launchDate = new Date().getTime() + (14 * 24 * 60 * 60 * 1000);
-
-    const timer = setInterval(function() {
-      const now = new Date().getTime();
-      const distance = launchDate - now;
-
-      const days = Math.floor(distance / (1000 * 60 * 60 * 24));
-      const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-      const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-
-      document.getElementById("days").innerText = days < 10 ? "0" + days : days;
-      document.getElementById("hours").innerText = hours < 10 ? "0" + hours : hours;
-      document.getElementById("minutes").innerText = minutes < 10 ? "0" + minutes : minutes;
-      document.getElementById("seconds").innerText = seconds < 10 ? "0" + seconds : seconds;
-
-      if (distance < 0) {
-        clearInterval(timer);
-        document.querySelector(".countdown").innerHTML = "<h3>We Are Live!</h3>";
-      }
-    }, 1000);
-  </script>
 
 </body>
 </html>
