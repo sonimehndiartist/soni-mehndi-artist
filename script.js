@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Open cart when clicking nav link
     cartLink.addEventListener('click', (e) => {
-        e.preventDefault(); // Stop page from jumping to top
+        e.preventDefault(); 
         cartSlider.classList.add('open');
         cartOverlay.classList.add('active');
     });
@@ -54,7 +54,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
             updateCartUI();
             
-            // Optional: Show a quick notification instead of a blocking alert
             alert(`${name} added to your cart! Click the Cart button to view.`);
         });
     });
