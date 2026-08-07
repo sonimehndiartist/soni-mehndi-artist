@@ -56,6 +56,30 @@
         </div>
     </div>
 
+    <!-- ADD NEW ADDRESS MODAL -->
+    <div id="new-address-modal" class="modal-overlay">
+        <div class="modal-box">
+            <button id="close-new-address-btn" class="close-modal-btn">&times;</button>
+            <h2>Add Delivery Address</h2>
+            <p>Enter contact person & address details.</p>
+            
+            <input type="text" id="add-contact-person" placeholder="Contact Person Full Name" />
+            <input type="email" id="add-email" placeholder="Email Address" />
+            <input type="tel" id="add-mobile" placeholder="Mobile Number" />
+            <textarea id="add-full-address" placeholder="Full Address (House/Flat No, Area, City, State)" style="width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 5px; font-size: 1rem; resize: vertical; height: 70px;"></textarea>
+            <input type="text" id="add-pincode" placeholder="Pin Code" />
+            
+            <select id="add-tag-type" style="width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 5px; font-size: 1rem;">
+                <option value="Home">Home</option>
+                <option value="Work">Work</option>
+                <option value="Other">Other</option>
+            </select>
+            
+            <button id="save-address-btn" class="btn" style="width: 100%;">Save Address</button>
+            <p id="address-form-msg" class="error-msg"></p>
+        </div>
+    </div>
+
     <!-- USER PROFILE / LOGOUT OVERLAY -->
     <div id="profile-modal" class="modal-overlay">
         <div class="modal-box">
@@ -74,7 +98,7 @@
         <h1 class="logo">Soni Mehndi Artist</h1>
     </div>
 
-    <!-- STICKY NAVIGATION BAR (HOME, SHOP, LOGIN, CART) -->
+    <!-- STICKY NAVIGATION BAR -->
     <header class="sticky-nav">
         <nav>
             <ul>
@@ -144,7 +168,7 @@
         </section>
     </main>
 
-    <!-- CART SLIDER -->
+    <!-- CART OVERLAY & SLIDER -->
     <div id="cart-overlay" class="cart-overlay"></div>
     <div id="cart-slider" class="cart-slider">
         <div class="cart-header">
@@ -154,11 +178,78 @@
         <div id="cart-items"><p class="empty-cart">Your cart is currently empty.</p></div>
         <div id="cart-total" style="display:none;">
             <h3>Estimated Total: ₹<span id="total-amount">0</span></h3>
-            <button class="btn checkout-btn">Proceed to WhatsApp Checkout</button>
+            <button id="goto-delivery-btn" class="btn checkout-btn">Delivery Address</button>
         </div>
     </div>
 
-    <!-- CRISP MATCHING VECTOR FLOATING WHATSAPP BUTTON -->
+    <!-- DELIVERY ADDRESS TAB -->
+    <div id="address-slider" class="cart-slider">
+        <div class="cart-header">
+            <h2>Delivery Details</h2>
+            <button id="close-address" class="close-cart-btn">&times;</button>
+        </div>
+
+        <div class="delivery-details-container">
+            <div class="address-top-bar">
+                <span class="select-address-title">Select Delivery Address</span>
+                <button id="trigger-add-address-modal" class="add-address-pill-btn">+ Add New Address</button>
+            </div>
+
+            <div id="address-cards-list" class="address-cards-list">
+                <p id="empty-address-msg" class="empty-address-msg">No delivery address available.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- NEW: ORDER SUMMARY & PAYMENT TAB -->
+    <div id="summary-slider" class="cart-slider">
+        <div class="cart-header">
+            <h2>Order Summary</h2>
+            <button id="close-summary" class="close-cart-btn">&times;</button>
+        </div>
+
+        <div class="summary-container">
+            <!-- Selected Delivery Address Card -->
+            <div class="summary-section">
+                <h3>Delivery Address</h3>
+                <div id="summary-address-card" class="summary-address-box">
+                    <!-- Populated dynamically -->
+                </div>
+            </div>
+
+            <!-- Order Items Breakdown -->
+            <div class="summary-section">
+                <h3>Order Details</h3>
+                <div id="summary-items-list" class="summary-items-box">
+                    <!-- Populated dynamically -->
+                </div>
+            </div>
+
+            <!-- Pricing Breakdown -->
+            <div class="summary-section pricing-box">
+                <div class="price-row">
+                    <span>Items Subtotal:</span>
+                    <span>₹<span id="summary-subtotal">0</span></span>
+                </div>
+                <div class="price-row">
+                    <span>Shipping Charges:</span>
+                    <span style="color: #2e7d32; font-weight: bold;">₹<span id="summary-shipping">50</span></span>
+                </div>
+                <hr style="margin: 10px 0; border: none; border-top: 1px dashed #ccc;">
+                <div class="price-row grand-total-row">
+                    <span>Total Amount Payable:</span>
+                    <span>₹<span id="summary-grand-total">0</span></span>
+                </div>
+            </div>
+
+            <!-- Make Payment Button -->
+            <button id="make-payment-btn" class="btn checkout-btn" style="background-color: #25D366; font-size: 1.1rem; padding: 15px; margin-top: 20px;">
+                Make Payment
+            </button>
+        </div>
+    </div>
+
+    <!-- FLOATING WHATSAPP BUTTON -->
     <a href="https://wa.me/919413425400" class="floating-whatsapp" target="_blank" title="Chat with us on WhatsApp">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 308 308" width="40" height="40" fill="#FFFFFF">
             <path d="M227.904,176.981c-0.6-0.288-23.054-11.345-27.044-12.781c-3.99-1.436-6.898-2.155-9.805,2.155

@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     let cart = [];
-    let currentUser = null; // Stores object: { name, mobile }
+    let currentUser = null; 
+    let addressesList = []; // Dynamic list of saved delivery addresses
 
     // --- LOGIN & REGISTER LOGIC ---
     const loginLink = document.getElementById('login-link');
@@ -25,6 +26,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const registerSubmitBtn = document.getElementById('register-submit-btn');
     const registerMessage = document.getElementById('register-message');
     const backToLoginBtn = document.getElementById('back-to-login-btn');
+
+    // New Address Modal elements
+    const triggerAddAddressBtn = document.getElementById('trigger-add-address-modal');
+    const newAddressModal = document.getElementById('new-address-modal');
+    const closeNewAddressBtn = document.getElementById('close-new-address-btn');
+    const addContactPerson = document.getElementById('add-contact-person');
+    const addEmail = document.getElementById('add-email');
+    const addMobile = document.getElementById('add-mobile');
+    const addFullAddress = document.getElementById('add-full-address');
+    const addPincode = document.getElementById('add-pincode');
+    const addTagType = document.getElementById('add-tag-type');
+    const saveAddressBtn = document.getElementById('save-address-btn');
+    const addressFormMsg = document.getElementById('address-form-msg');
+    const addressCardsList = document.getElementById('address-cards-list');
 
     // Profile elements
     const profileModal = document.getElementById('profile-modal');
@@ -73,6 +88,80 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => mobileInput.focus(), 100);
     });
 
+    // Add New Address Modal Toggle
+    triggerAddAddressBtn.addEventListener('click', () => {
+        newAddressModal.classList.add('active');
+        addressFormMsg.textContent = '';
+    });
+
+    closeNewAddressBtn.addEventListener('click', () => {
+        newAddressModal.classList.remove('active');
+    });
+
+    // Save New Address
+    saveAddressBtn.addEventListener('click', () => {
+        const contactPerson = addContactPerson.value.trim();
+        const email = addEmail.value.trim();
+        const mobile = addMobile.value.trim();
+        const fullAddr = addFullAddress.value.trim();
+        const pincode = addPincode.value.trim();
+        const tag = addTagType.value;
+
+        if (!contactPerson || !email || !mobile || !fullAddr || !pincode) {
+            addressFormMsg.style.color = '#c91818';
+            addressFormMsg.textContent = 'Please fill out all address details.';
+            return;
+        }
+
+        const newAddressObj = {
+            id: Date.now(),
+            contactPerson,
+            email,
+            mobile,
+            fullAddr: `${fullAddr}, ${pincode}`,
+            tag
+        };
+
+        addressesList.push(newAddressObj);
+        renderAddressCards();
+
+        // Clear and close modal
+        addContactPerson.value = '';
+        addEmail.value = '';
+        addMobile.value = '';
+        addFullAddress.value = '';
+        addPincode.value = '';
+        addressFormMsg.textContent = '';
+        newAddressModal.classList.remove('active');
+    });
+
+    function renderAddressCards() {
+        if (addressesList.length === 0) {
+            addressCardsList.innerHTML = '<p id="empty-address-msg" class="empty-address-msg">No delivery address available.</p>';
+            return;
+        }
+
+        let html = '';
+        addressesList.forEach((addr, index) => {
+            const isSelected = index === 0 ? 'selected-card' : '';
+            html += `
+                <div class="ui-address-card ${isSelected}">
+                    <div class="ui-card-header">
+                        <span class="ui-card-name">${addr.contactPerson}</span>
+                        <span class="ui-card-tag">${addr.tag}</span>
+                        <span class="ui-card-more">&#8942;</span>
+                    </div>
+                    <p class="ui-card-address">${addr.fullAddr}</p>
+                    <p class="ui-card-contact">${addr.email}</p>
+                    <p class="ui-card-contact">${addr.mobile}</p>
+                    <button class="deliver-here-btn" data-id="${addr.id}">Deliver Here</button>
+                </div>
+            `;
+        });
+
+        addressCardsList.innerHTML = html;
+    }
+
     [mobileInput, passwordInput].forEach(input => {
         if(input) {
             input.addEventListener('keypress', (e) => {
@@ -91,13 +180,11 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // Check for temporary credentials 123456 / 123456 or 9413425400 / admin
         if (mobile === '123456' && pass === '123456') {
             currentUser = { name: 'admin', mobile: '123456' };
         } else if (mobile === '9413425400' && pass === 'admin') {
             currentUser = { name: 'admin', mobile: '9413425400' };
         } else if (mobile) {
-            // General test fallback login
             currentUser = { name: 'User (' + mobile.slice(-4) + ')', mobile: mobile };
         } else {
             loginMessage.style.color = '#c91818';
@@ -105,7 +192,6 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // On successful login: update navigation bar link text to the user's name
         loginModal.classList.remove('active');
         loginLink.textContent = currentUser.name;
         mobileInput.value = '';
@@ -126,14 +212,11 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // Set logged in user info from registration
         currentUser = { name: name, mobile: mobile };
         registerModal.classList.remove('active');
         
-        // Update navigation bar text
         loginLink.textContent = currentUser.name;
 
-        // Clear register inputs
         regNameInput.value = '';
         regMobileInput.value = '';
         regPasswordInput.value = '';
@@ -153,32 +236,75 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
 
-    // --- CART LOGIC ---
+    // --- CART & ADDRESS SLIDER LOGIC ---
     const cartBadge = document.getElementById('cart-badge');
     const cartHeaderCount = document.getElementById('cart-header-count');
     const cartLink = document.getElementById('cart-link');
     const cartSlider = document.getElementById('cart-slider');
+    const addressSlider = document.getElementById('address-slider');
     const cartOverlay = document.getElementById('cart-overlay');
     const closeCartBtn = document.getElementById('close-cart');
+    const closeAddressBtn = document.getElementById('close-address');
     const cartItemsContainer = document.getElementById('cart-items');
     const cartTotalDiv = document.getElementById('cart-total');
     const totalAmountSpan = document.getElementById('total-amount');
+    const gotoDeliveryBtn = document.getElementById('goto-delivery-btn');
 
     cartLink.addEventListener('click', (e) => {
         e.preventDefault(); 
+        addressSlider.classList.remove('open');
         cartSlider.classList.add('open');
         cartOverlay.classList.add('active');
     });
 
-    function closeCart() {
+    function closeAllSliders() {
         cartSlider.classList.remove('open');
+        addressSlider.classList.remove('open');
         cartOverlay.classList.remove('active');
     }
-    closeCartBtn.addEventListener('click', closeCart);
-    cartOverlay.addEventListener('click', closeCart);
 
+    closeCartBtn.addEventListener('click', closeAllSliders);
+    closeAddressBtn.addEventListener('click', closeAllSliders);
+    cartOverlay.addEventListener('click', closeAllSliders);
+
+    // Open Delivery Address tab from Cart Slider
+    gotoDeliveryBtn.addEventListener('click', () => {
+        if (!currentUser) {
+            closeAllSliders();
+            loginModal.classList.add('active');
+            setTimeout(() => mobileInput.focus(), 100);
+            loginMessage.style.color = '#c91818';
+            loginMessage.textContent = 'You must log in to proceed to delivery address.';
+        } else {
+            cartSlider.classList.remove('open');
+            addressSlider.classList.add('open');
+        }
+    });
+
+    // Handle "Deliver Here" click -> WhatsApp redirect with full order & address summary
     document.body.addEventListener('click', (e) => {
-        if (e.target.classList.contains('add-to-cart-btn')) {
+        if (e.target.classList.contains('deliver-here-btn')) {
+            const addrId = parseInt(e.target.getAttribute('data-id'));
+            const chosenAddr = addressesList.find(a => a.id === addrId);
+
+            if (chosenAddr) {
+                let orderSummary = `Hello Soni Mehndi Artist! I would like to place an order:%0A%0A` +
+                    `*Customer:* ${chosenAddr.contactPerson}%0A` +
+                    `*Mobile:* ${chosenAddr.mobile}%0A` +
+                    `*Email:* ${chosenAddr.email}%0A` +
+                    `*Delivery Address (${chosenAddr.tag}):* ${chosenAddr.fullAddr}%0A%0A` +
+                    `*Order Items:*%0A`;
+
+                cart.forEach(item => {
+                    orderSummary += `- ${item.name} (${item.unit}) x${item.quantity} = ₹${item.price * item.quantity}%0A`;
+                });
+
+                orderSummary += `%0A*Estimated Total:* ₹${totalAmountSpan.textContent}`;
+
+                window.open(`https://wa.me/919413425400?text=${orderSummary}`, '_blank');
+            }
+        }
+        else if (e.target.classList.contains('add-to-cart-btn')) {
             const name = e.target.getAttribute('data-name');
             const unit = e.target.getAttribute('data-unit');
             const price = parseFloat(e.target.getAttribute('data-price'));
@@ -276,27 +402,4 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     cartBadge.style.display = 'none';
-
-    // --- CHECKOUT LOGIC ---
-    const checkoutBtn = document.querySelector('.checkout-btn');
-    
-    checkoutBtn.addEventListener('click', () => {
-        if (!currentUser) {
-            closeCart();
-            loginModal.classList.add('active');
-            setTimeout(() => mobileInput.focus(), 100);
-            
-            loginMessage.style.color = '#c91818';
-            loginMessage.textContent = 'You must log in to proceed to checkout.';
-        } else {
-            let orderSummary = `Hello Soni Mehndi Artist! I would like to place an order:%0A%0AUser: ${currentUser.name}%0AMobile: ${currentUser.mobile}%0A%0AOrder Items:%0A`;
-            cart.forEach(item => {
-                orderSummary += `- ${item.name} (${item.unit}) x${item.quantity} = ₹${item.price * item.quantity}%0A`;
-            });
-            orderSummary += `%0AEstimated Total: ₹${totalAmountSpan.textContent}`;
-            
-            window.open(`https://wa.me/919413425400?text=${orderSummary}`, '_blank');
-        }
-    });
-
 });
