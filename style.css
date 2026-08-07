@@ -130,7 +130,6 @@ section h2 {
     transform: translateY(-5px);
 }
 
-/* Dynamic Product Image Placeholders (Replace these with your actual <img> tags) */
 .img-container {
     width: 100%;
     height: 220px;
@@ -140,11 +139,6 @@ section h2 {
     font-weight: bold;
     color: white;
 }
-
-/* Distinct visual placeholder backgrounds simulating actual product photos */
-.cone-bg { background-color: #8d5b4c; }    /* Earthy brown for cones */
-.powder-bg { background-color: #587d71; }  /* Sage green for organic henna powder */
-.oil-bg { background-color: #bc8a5f; }     /* Amber gold for essential oils */
 
 .product-card h3 {
     font-size: 1.1rem;
@@ -202,32 +196,74 @@ section h2 {
     border-bottom: 1px solid #eee;
 }
 
-/* Service cards */
-.grid {
-    display: flex;
-    justify-content: center;
-    gap: 30px;
-    flex-wrap: wrap;
-}
-
-.card {
-    background: white;
-    padding: 30px;
-    border-radius: 8px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-    width: 320px;
-    text-align: left;
-}
-
-.card h3 {
-    color: #7b2c22;
-    margin-bottom: 10px;
-}
-
 /* Footer */
 footer {
     background-color: #2c221e;
     color: #e6dfd5;
     text-align: center;
     padding: 25px;
+}
+
+/* =========================================
+   RESPONSIVE DESIGN (MOBILE & TABLET FIXES)
+   ========================================= */
+
+/* Tablets and Smaller Desktops (Max width 900px) */
+@media (max-width: 900px) {
+    .product-grid {
+        gap: 20px;
+    }
+    
+    .product-card {
+        width: 45%; /* Shows two products side-by-side on tablets */
+    }
+}
+
+/* Mobile Phones (Max width 600px) */
+@media (max-width: 600px) {
+    
+    /* Adjust Header for small screens */
+    header {
+        flex-direction: column;
+        padding: 1rem;
+        gap: 15px;
+    }
+
+    header ul {
+        gap: 1rem;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    header a {
+        font-size: 0.9rem;
+    }
+
+    /* Shrink the Hero text slightly */
+    .hero {
+        padding: 80px 5%;
+    }
+
+    .hero h1 {
+        font-size: 2rem;
+    }
+
+    .hero p {
+        font-size: 1rem;
+    }
+
+    /* Stack Products vertically on mobile */
+    .product-card {
+        width: 100%; 
+        max-width: 350px; /* Prevents cards from getting too stretched */
+    }
+
+    /* General section padding adjustments */
+    section {
+        padding: 50px 5%;
+    }
+
+    section h2 {
+        font-size: 1.8rem;
+    }
 }
