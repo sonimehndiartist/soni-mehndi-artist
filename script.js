@@ -137,6 +137,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- CART LOGIC ---
     const cartBadge = document.getElementById('cart-badge');
+    const cartHeaderCount = document.getElementById('cart-header-count');
     const cartLink = document.getElementById('cart-link');
     const cartSlider = document.getElementById('cart-slider');
     const cartOverlay = document.getElementById('cart-overlay');
@@ -161,8 +162,9 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.addEventListener('click', (e) => {
         if (e.target.classList.contains('add-to-cart-btn')) {
             const name = e.target.getAttribute('data-name');
+            const unit = e.target.getAttribute('data-unit');
             const price = parseFloat(e.target.getAttribute('data-price'));
-            cart.push({ name, price, quantity: 1 });
+            cart.push({ name, unit, price, quantity: 1 });
             updateAllUI();
         }
         else if (e.target.classList.contains('increase-qty')) {
@@ -189,6 +191,10 @@ document.addEventListener('DOMContentLoaded', () => {
     function updateAllUI() {
         const totalCount = cart.reduce((sum, item) => sum + item.quantity, 0);
         
+        // Update Cart Header Count (e.g. "Your Cart (5 Items)")
+        cartHeaderCount.textContent = `${totalCount} ${totalCount === 1 ? 'Item' : 'Items'}`;
+
+        // Update Nav Badge
         cartBadge.textContent = totalCount;
         if (totalCount > 0) {
             cartBadge.style.display = 'flex';
@@ -199,6 +205,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const productActionAreas = document.querySelectorAll('.product-actions');
         productActionAreas.forEach(area => {
             const name = area.getAttribute('data-name');
+            const unit = area.getAttribute('data-unit');
             const price = area.getAttribute('data-price');
             const itemInCart = cart.find(i => i.name === name);
 
@@ -212,7 +219,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 `;
             } else {
                 area.innerHTML = `
-                    <button class="add-to-cart-btn" data-name="${name}" data-price="${price}">Add to Cart</button>
+                    <button class="add-to-cart-btn" data-name="${name}" data-unit="${unit}" data-price="${price}">Add to Cart</button>
                 `;
             }
         });
@@ -232,7 +239,7 @@ document.addEventListener('DOMContentLoaded', () => {
             cartHTML += `
                 <div class="cart-row">
                     <div class="cart-item-info">
-                        <span>${item.name}</span>
+                        <span>${item.name} (${item.unit})</span>
                         <span style="color: #7b2c22;">₹${itemTotal}</span>
                     </div>
                     <div class="cart-item-actions">
@@ -268,9 +275,9 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             let orderSummary = `Hello Soni Mehndi Artist! I would like to place an order (Mobile: ${loggedInMobile}):%0A%0A`;
             cart.forEach(item => {
-                orderSummary += `- ${item.name} (x${item.quantity}) = ₹${item.price * item.quantity}%0A`;
+                orderSummary += `- ${item.name} (${item.unit}) x${item.quantity} = ₹${item.price * item.quantity}%0A`;
             });
-            orderSummary += `%0ATotal Amount: ₹${totalAmountSpan.textContent}`;
+            orderSummary += `%0AEstimated Total: ₹${totalAmountSpan.textContent}`;
             
             window.open(`https://wa.me/919413425400?text=${orderSummary}`, '_blank');
         }
