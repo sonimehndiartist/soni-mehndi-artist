@@ -214,9 +214,13 @@
       </div>
     </div>
 
-    <!-- Email Signup -->
-    <form class="subscribe-form" action="#" method="post" onsubmit="event.preventDefault(); alert('Thank you! We will notify you when we launch.');">
-      <input type="email" placeholder="Enter your email for early access..." required>
+    <!-- Email Signup using FormSubmit -->
+    <form class="subscribe-form" action="https://formsubmit.co/sonimehndiartist@gmail.com" method="POST">
+      <input type="email" name="email" placeholder="Enter your email for early access..." required>
+      <input type="hidden" name="_subject" value="New Early Access Subscriber!">
+      <input type="hidden" name="_captcha" value="false">
+      <!-- Optional: Add a redirect URL after they submit the form. If you want them to stay on the same page, you can remove the line below or point it back to your website URL once it is live. -->
+      <!-- <input type="hidden" name="_next" value="https://yourwebsite.com/thanks.html"> -->
       <button type="submit">Notify Me</button>
     </form>
   </div>
