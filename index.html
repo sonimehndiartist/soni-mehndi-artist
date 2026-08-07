@@ -1,128 +1,104 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Soni Mehndi Artist | Coming Soon</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --primary-green: #2C4A3E;
-      --deep-forest: #1A3027;
-      --warm-gold: #D4AF37;
-      --soft-gold: #F3E5AB;
-      --cream: #FAF6EE;
-      --dark-text: #222222;
-      --light-text: #666666;
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background-color: var(--cream);
-      color: var(--dark-text);
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      align-items: center;
-      text-align: center;
-      padding: 2rem 1rem;
-      background-image: 
-        radial-gradient(circle at 10% 20%, rgba(212, 175, 55, 0.08) 0%, transparent 20%),
-        radial-gradient(circle at 90% 80%, rgba(44, 74, 62, 0.08) 0%, transparent 20%);
-    }
-
-    .container {
-      max-width: 700px;
-      width: 100%;
-      margin: auto;
-    }
-
-    .mandala-icon {
-      width: 70px;
-      height: 70px;
-      margin-bottom: 1rem;
-      fill: var(--warm-gold);
-    }
-
-    .brand-name {
-      font-size: 1.1rem;
-      text-transform: uppercase;
-      letter-spacing: 4px;
-      color: var(--primary-green);
-      font-weight: 600;
-      margin-bottom: 0.5rem;
-    }
-
-    /* Large Custom Heading */
-    .main-title {
-      font-family: 'Cinzel', serif;
-      font-size: 3.8rem;
-      color: var(--deep-forest);
-      text-transform: uppercase;
-      letter-spacing: 6px;
-      font-weight: 700;
-      line-height: 1.1;
-      margin-bottom: 0.5rem;
-      text-shadow: 1px 1px 2px rgba(212, 175, 55, 0.3);
-    }
-
-    .sub-title {
-      font-size: 1.5rem;
-      color: var(--warm-gold);
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 4px;
-      margin-bottom: 1.5rem;
-    }
-
-    .tagline {
-      font-size: 1.15rem;
-      color: var(--light-text);
-      line-height: 1.6;
-    }
-
-    footer {
-      margin-top: 3rem;
-      font-size: 0.85rem;
-      color: var(--light-text);
-    }
-
-    /* Responsive Design */
-    @media (max-width: 480px) {
-      .main-title { font-size: 2.4rem; letter-spacing: 3px; }
-      .sub-title { font-size: 1.1rem; letter-spacing: 2px; }
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Soni Mehndi Artist | Organic Henna & Cones Shop</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <header>
+        <div class="logo">Soni Mehndi</div>
+        <nav>
+            <ul>
+                <li><a href="#home">Home</a></li>
+                <li><a href="#shop">Shop Products</a></li>
+                <li><a href="#services">Bridal Services</a></li>
+                <li><a href="#cart" id="cart-link">Cart (<span id="cart-count">0</span>)</a></li>
+            </ul>
+        </nav>
+    </header>
 
-  <div class="container">
-    <!-- Decorative Mandala Icon -->
-    <svg class="mandala-icon" viewBox="0 0 24 24">
-      <path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M12,6A6,6 0 0,0 6,12A6,6 0 0,0 12,18A6,6 0 0,0 18,12A6,6 0 0,0 12,6M12,8A4,4 0 0,1 16,12A4,4 0 0,1 12,16A4,4 0 0,1 8,12A4,4 0 0,1 12,8Z"/>
-    </svg>
+    <section id="home" class="hero">
+        <div class="hero-content">
+            <h1>Pure, Organic Henna & Professional Supplies</h1>
+            <p>Handcrafted bridal henna cones, 100% chemical-free powder, and pure essential oils for a deep, long-lasting stain.</p>
+            <a href="#shop" class="btn">Shop Best Sellers</a>
+        </div>
+    </section>
 
-    <p class="brand-name">Organic & Handcrafted</p>
-    
-    <!-- Large Heading -->
-    <h1 class="main-title">Soni</h1>
-    <div class="sub-title">Mehndi Artist</div>
+    <!-- SHOP / PRODUCTS SECTION -->
+    <section id="shop" class="shop-section">
+        <h2>Our E-Commerce Store</h2>
+        <p class="section-subtitle">Elevate your art with our premium, skin-safe ingredients.</p>
+        
+        <div class="product-grid">
+            <!-- Product 1: Henna Cones -->
+            <div class="product-card">
+                <div class="img-container">
+                    <img src="https://encrypted-tbn0.gstatic.com/licensed-image?q=tbn:ANd9GcRBIJW0rpFVnLowxewfvzgWoHeiz56545RgUI2_CPA_WVzy38GkWvJru0yKDqvtR33tUmhD2DAxATsvz8o" alt="Henna artist applying mehndi with a cone" style="width: 100%; height: 100%; object-fit: cover;">
+                </div>
+                <h3>Bridal Henna Cones (Pack of 5)</h3>
+                <p class="price">₹350</p>
+                <p class="desc">Freshly mixed with Nilgiri and Eucalyptus essential oils. Rich dark stain guaranteed.</p>
+                <button class="add-to-cart-btn" data-name="Bridal Henna Cones" data-price="350">Add to Cart</button>
+            </div>
 
-    <p class="tagline">We are crafting premium, 100% natural organic mehndi cones, essential oils, and henna kits for your special occasions. Coming soon!</p>
-  </div>
+            <!-- Product 2: Henna Powder -->
+            <div class="product-card">
+                <div class="img-container">
+                    <img src="https://encrypted-tbn3.gstatic.com/licensed-image?q=tbn:ANd9GcTEXa7rcKx6px7VcZQ34tJuCfCTFXAhsIllvhLf9k9jD5ziFxWTh2H9uh2szv4jw-Ld-QBHP1UNDMS4wK0" alt="Organic henna powder in a white bowl with green leaves" style="width: 100%; height: 100%; object-fit: cover;">
+                </div>
+                <h3>Organic Sojat Henna Powder (250g)</h3>
+                <p class="price">₹450</p>
+                <p class="desc">Triple-sifted, pure natural crop directly from Sojat. Perfect for professional paste mixing.</p>
+                <button class="add-to-cart-btn" data-name="Sojat Henna Powder" data-price="450">Add to Cart</button>
+            </div>
 
-  <footer>
-    <p>&copy; 2026 Soni Mehndi Artist. All rights reserved.</p>
-  </footer>
+            <!-- Product 3: Essential Oil -->
+            <div class="product-card">
+                <div class="img-container">
+                    <img src="https://encrypted-tbn2.gstatic.com/licensed-image?q=tbn:ANd9GcQKl5Zi8OogedeMOEy9Wqj6aQ686SjkyznR9bC2WyRpG0s0mmz-qru5_hvvr6mnnECrPsvzRB5udYQALtI" alt="Hand holding a small amber bottle of essential oil" style="width: 100%; height: 100%; object-fit: cover;">
+                </div>
+                <h3>Pure Henna Aftercare Oil (30ml)</h3>
+                <p class="price">₹299</p>
+                <p class="desc">Special blend of eucalyptus and clove oil to seal the design and darken the stain.</p>
+                <button class="add-to-cart-btn" data-name="Henna Aftercare Oil" data-price="299">Add to Cart</button>
+            </div>
+        </div>
+    </section>
 
+    <!-- SERVICES SECTION -->
+    <section id="services" class="services-section">
+        <h2>Book a Mehndi Artist</h2>
+        <div class="grid">
+            <div class="card">
+                <h3>Bridal Packages</h3>
+                <p>Detailed, custom storytelling figures and intricate bridal patterns.</p>
+            </div>
+            <div class="card">
+                <h3>Guest & Party Mehndi</h3>
+                <p>Quick, stunning Arabic and Indo-Western styles for celebrations.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- CHECKOUT / CART DRAWER SECTION -->
+    <section id="cart" class="cart-section">
+        <h2>Your Shopping Cart</h2>
+        <div id="cart-items">
+            <p class="empty-cart">Your cart is currently empty.</p>
+        </div>
+        <div id="cart-total" style="display:none;">
+            <h3>Total: ₹<span id="total-amount">0</span></h3>
+            <button class="btn checkout-btn">Proceed to WhatsApp Checkout</button>
+        </div>
+    </section>
+
+    <footer>
+        <p>&copy; 2026 Soni Mehndi Artist & Store. All Rights Reserved.</p>
+    </footer>
+
+    <script src="script.js"></script>
 </body>
 </html>
