@@ -215,14 +215,22 @@
     </div>
 
     <!-- Email Signup using FormSubmit -->
-    <form class="subscribe-form" action="https://formsubmit.co/sonimehndiartist@gmail.com" method="POST">
-      <input type="email" name="email" placeholder="Enter your email for early access..." required>
-      <input type="hidden" name="_subject" value="New Early Access Subscriber!">
-      <input type="hidden" name="_captcha" value="false">
-      <!-- Optional: Add a redirect URL after they submit the form. If you want them to stay on the same page, you can remove the line below or point it back to your website URL once it is live. -->
-      <!-- <input type="hidden" name="_next" value="https://yourwebsite.com/thanks.html"> -->
-      <button type="submit">Notify Me</button>
-    </form>
+    <!-- Email Signup using Web3Forms -->
+<form class="subscribe-form" action="https://api.web3forms.com/submit" method="POST">
+  
+  <!-- Paste your Web3Forms access key below -->
+  <input type="hidden" name="access_key" value="YOUR_ACCESS_KEY_HERE">
+  
+  <input type="email" name="email" placeholder="Enter your email for early access..." required>
+  
+  <!-- Optional: Customizes the subject line in your inbox -->
+  <input type="hidden" name="subject" value="New Early Access Subscriber!">
+  
+  <!-- Optional: Redirects them to a generic success page -->
+  <input type="hidden" name="redirect" value="https://web3forms.com/success">
+
+  <button type="submit">Notify Me</button>
+</form>
   </div>
 
   <footer>
