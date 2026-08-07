@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Soni Mehndi Artist | Organic Henna & Cones Shop</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <div class="logo">Soni Mehndi</div>
+        <nav>
+            <ul>
+                <li><a href="#home">Home</a></li>
+                <li><a href="#shop">Shop Products</a></li>
+                <li><a href="#cart" id="cart-link">Cart (<span id="cart-count">0</span>)</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <section id="home" class="hero">
+        <div class="hero-content">
+            <h1>Pure, Organic Henna & Professional Supplies</h1>
+            <p>Handcrafted bridal henna cones, 100% chemical-free powder, and pure essential oils for a deep, long-lasting stain.</p>
+            <a href="#shop" class="btn">Shop Best Sellers</a>
+        </div>
+    </section>
+
+    <!-- SHOP / PRODUCTS SECTION -->
+    <section id="shop" class="shop-section">
+        <h2>Our E-Commerce Store</h2>
+        <p class="section-subtitle">Elevate your art with our premium, skin-safe ingredients.</p>
+        
+        <div class="product-grid">
+            <!-- Product 1: Henna Cones -->
+            <div class="product-card">
+                <div class="img-container">
+                    <img src="https://encrypted-tbn0.gstatic.com/licensed-image?q=tbn:ANd9GcRBIJW0rpFVnLowxewfvzgWoHeiz56545RgUI2_CPA_WVzy38GkWvJru0yKDqvtR33tUmhD2DAxATsvz8o" alt="Henna artist applying mehndi with a cone" style="width: 100%; height: 100%; object-fit: cover;">
+                </div>
+                <h3>Bridal Henna Cones (Pack of 5)</h3>
+                <p class="price">₹350</p>
+                <p class="desc">Freshly mixed with Nilgiri and Eucalyptus essential oils. Rich dark stain guaranteed.</p>
+                <button class="add-to-cart-btn" data-name="Bridal Henna Cones" data-price="350">Add to Cart</button>
+            </div>
+
+            <!-- Product 2: Henna Powder -->
+            <div class="product-card">
+                <div class="img-container">
+                    <img src="https://encrypted-tbn3.gstatic.com/licensed-image?q=tbn:ANd9GcTEXa7rcKx6px7VcZQ34tJuCfCTFXAhsIllvhLf9k9jD5ziFxWTh2H9uh2szv4jw-Ld-QBHP1UNDMS4wK0" alt="Organic henna powder in a white bowl with green leaves" style="width: 100%; height: 100%; object-fit: cover;">
+                </div>
+                <h3>Organic Sojat Henna Powder (250g)</h3>
+                <p class="price">₹450</p>
+                <p class="desc">Triple-sifted, pure natural crop directly from Sojat. Perfect for professional paste mixing.</p>
+                <button class="add-to-cart-btn" data-name="Sojat Henna Powder" data-price="450">Add to Cart</button>
+            </div>
+
+            <!-- Product 3: Essential Oil -->
+            <div class="product-card">
+                <div class="img-container">
+                    <img src="https://encrypted-tbn2.gstatic.com/licensed-image?q=tbn:ANd9GcQKl5Zi8OogedeMOEy9Wqj6aQ686SjkyznR9bC2WyRpG0s0mmz-qru5_hvvr6mnnECrPsvzRB5udYQALtI" alt="Hand holding a small amber bottle of essential oil" style="width: 100%; height: 100%; object-fit: cover;">
+                </div>
+                <h3>Pure Henna Aftercare Oil (30ml)</h3>
+                <p class="price">₹299</p>
+                <p class="desc">Special blend of eucalyptus and clove oil to seal the design and darken the stain.</p>
+                <button class="add-to-cart-btn" data-name="Henna Aftercare Oil" data-price="299">Add to Cart</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- CART SLIDER (Hidden by default, slides in on click) -->
+    <div id="cart-overlay" class="cart-overlay"></div>
+    <div id="cart-slider" class="cart-slider">
+        <div class="cart-header">
+            <h2>Your Cart</h2>
+            <button id="close-cart" class="close-cart-btn">&times;</button>
+        </div>
+        
+        <div id="cart-items">
+            <p class="empty-cart">Your cart is currently empty.</p>
+        </div>
+        
+        <div id="cart-total" style="display:none;">
+            <h3>Total: ₹<span id="total-amount">0</span></h3>
+            <button class="btn checkout-btn">Proceed to WhatsApp Checkout</button>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2026 Soni Mehndi Artist & Store. All Rights Reserved.</p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
