@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
     let cart = [];
-    let loggedInMobile = null; 
+    let currentUser = null; // Stores object: { name, mobile }
 
     // --- LOGIN & REGISTER LOGIC ---
     const loginLink = document.getElementById('login-link');
@@ -16,6 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const openRegisterBtn = document.getElementById('open-register-btn');
     const registerModal = document.getElementById('register-modal');
     const closeRegisterBtn = document.getElementById('close-register-btn');
+    const regNameInput = document.getElementById('reg-name-input');
     const regMobileInput = document.getElementById('reg-mobile-input');
     const regPasswordInput = document.getElementById('reg-password-input');
     const regAddressInput = document.getElementById('reg-address-input');
@@ -29,12 +30,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const profileModal = document.getElementById('profile-modal');
     const closeProfileBtn = document.getElementById('close-profile-btn');
     const logoutBtn = document.getElementById('logout-btn');
+    const profileNameDisplay = document.getElementById('profile-name-display');
     const profileMobileDisplay = document.getElementById('profile-mobile-display');
 
     loginLink.addEventListener('click', (e) => {
         e.preventDefault();
-        if (loggedInMobile) {
-            profileMobileDisplay.textContent = loggedInMobile;
+        if (currentUser) {
+            profileNameDisplay.textContent = currentUser.name;
+            profileMobileDisplay.textContent = currentUser.mobile;
             profileModal.classList.add('active');
         } else {
             loginModal.classList.add('active');
@@ -55,7 +58,7 @@ document.addEventListener('DOMContentLoaded', () => {
         loginModal.classList.remove('active');
         loginMessage.textContent = '';
         registerModal.classList.add('active');
-        setTimeout(() => regMobileInput.focus(), 100);
+        setTimeout(() => regNameInput.focus(), 100);
     });
 
     closeRegisterBtn.addEventListener('click', () => {
@@ -88,35 +91,50 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        if ((mobile === '9413425400' && pass === 'admin') || mobile) {
-            loggedInMobile = mobile;
-            loginModal.classList.remove('active');
-            loginLink.textContent = loggedInMobile;
-            mobileInput.value = '';
-            passwordInput.value = '';
-            loginMessage.textContent = '';
+        // Check for temporary credentials 123456 / 123456 or 9413425400 / admin
+        if (mobile === '123456' && pass === '123456') {
+            currentUser = { name: 'admin', mobile: '123456' };
+        } else if (mobile === '9413425400' && pass === 'admin') {
+            currentUser = { name: 'admin', mobile: '9413425400' };
+        } else if (mobile) {
+            // General test fallback login
+            currentUser = { name: 'User (' + mobile.slice(-4) + ')', mobile: mobile };
         } else {
             loginMessage.style.color = '#c91818';
             loginMessage.textContent = 'Invalid mobile number or password.';
+            return;
         }
+
+        // On successful login: update navigation bar link text to the user's name
+        loginModal.classList.remove('active');
+        loginLink.textContent = currentUser.name;
+        mobileInput.value = '';
+        passwordInput.value = '';
+        loginMessage.textContent = '';
     });
 
     registerSubmitBtn.addEventListener('click', () => {
+        const name = regNameInput.value.trim();
         const mobile = regMobileInput.value.trim();
         const pass = regPasswordInput.value.trim();
         const address = regAddressInput.value.trim();
         const pincode = regPincodeInput.value.trim();
 
-        if (!mobile || !pass || !address || !pincode) {
+        if (!name || !mobile || !pass || !address || !pincode) {
             registerMessage.style.color = '#c91818';
             registerMessage.textContent = 'Please fill out all required fields.';
             return;
         }
 
-        loggedInMobile = mobile;
+        // Set logged in user info from registration
+        currentUser = { name: name, mobile: mobile };
         registerModal.classList.remove('active');
-        loginLink.textContent = loggedInMobile;
+        
+        // Update navigation bar text
+        loginLink.textContent = currentUser.name;
 
+        // Clear register inputs
+        regNameInput.value = '';
         regMobileInput.value = '';
         regPasswordInput.value = '';
         regAddressInput.value = '';
@@ -124,11 +142,11 @@ document.addEventListener('DOMContentLoaded', () => {
         regRemarksInput.value = '';
         registerMessage.textContent = '';
 
-        alert('Registration successful! You are now logged in.');
+        alert(`Registration successful! Welcome, ${currentUser.name}. You are now logged in.`);
     });
 
     logoutBtn.addEventListener('click', () => {
-        loggedInMobile = null;
+        currentUser = null;
         loginLink.textContent = 'Login';
         profileModal.classList.remove('active');
         window.location.href = '#home';
@@ -191,10 +209,8 @@ document.addEventListener('DOMContentLoaded', () => {
     function updateAllUI() {
         const totalCount = cart.reduce((sum, item) => sum + item.quantity, 0);
         
-        // Update Cart Header Count (e.g. "Your Cart (5 Items)")
         cartHeaderCount.textContent = `${totalCount} ${totalCount === 1 ? 'Item' : 'Items'}`;
 
-        // Update Nav Badge
         cartBadge.textContent = totalCount;
         if (totalCount > 0) {
             cartBadge.style.display = 'flex';
@@ -265,7 +281,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const checkoutBtn = document.querySelector('.checkout-btn');
     
     checkoutBtn.addEventListener('click', () => {
-        if (!loggedInMobile) {
+        if (!currentUser) {
             closeCart();
             loginModal.classList.add('active');
             setTimeout(() => mobileInput.focus(), 100);
@@ -273,7 +289,7 @@ document.addEventListener('DOMContentLoaded', () => {
             loginMessage.style.color = '#c91818';
             loginMessage.textContent = 'You must log in to proceed to checkout.';
         } else {
-            let orderSummary = `Hello Soni Mehndi Artist! I would like to place an order (Mobile: ${loggedInMobile}):%0A%0A`;
+            let orderSummary = `Hello Soni Mehndi Artist! I would like to place an order:%0A%0AUser: ${currentUser.name}%0AMobile: ${currentUser.mobile}%0A%0AOrder Items:%0A`;
             cart.forEach(item => {
                 orderSummary += `- ${item.name} (${item.unit}) x${item.quantity} = ₹${item.price * item.quantity}%0A`;
             });
