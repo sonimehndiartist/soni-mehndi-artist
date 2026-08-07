@@ -1,25 +1,45 @@
 document.addEventListener('DOMContentLoaded', () => {
     let cart = [];
+    let loggedInMobile = null; 
 
-    // --- LOGIN & LOGOUT LOGIC ---
+    // --- LOGIN LOGIC ---
     const loginLink = document.getElementById('login-link');
     const loginModal = document.getElementById('login-modal');
     const closeLoginBtn = document.getElementById('close-login-btn');
-    const usernameInput = document.getElementById('username-input');
+    
+    const mobileInput = document.getElementById('mobile-input');
     const passwordInput = document.getElementById('password-input');
-    const loginSubmitBtn = document.getElementById('login-submit-btn');
+    const authSubmitBtn = document.getElementById('auth-submit-btn');
     const loginMessage = document.getElementById('login-message');
+
+    // Register Modal elements
+    const openRegisterBtn = document.getElementById('open-register-btn');
+    const registerModal = document.getElementById('register-modal');
+    const closeRegisterBtn = document.getElementById('close-register-btn');
+    const regMobileInput = document.getElementById('reg-mobile-input');
+    const regPasswordInput = document.getElementById('reg-password-input');
+    const regAddressInput = document.getElementById('reg-address-input');
+    const regPincodeInput = document.getElementById('reg-pincode-input');
+    const regRemarksInput = document.getElementById('reg-remarks-input');
+    const registerSubmitBtn = document.getElementById('register-submit-btn');
+    const registerMessage = document.getElementById('register-message');
+    const backToLoginBtn = document.getElementById('back-to-login-btn');
+
+    // Profile elements
     const profileModal = document.getElementById('profile-modal');
     const closeProfileBtn = document.getElementById('close-profile-btn');
     const logoutBtn = document.getElementById('logout-btn');
+    const profileMobileDisplay = document.getElementById('profile-mobile-display');
 
+    // Open Login Modal via Navigation
     loginLink.addEventListener('click', (e) => {
         e.preventDefault();
-        if (loginLink.textContent === 'Admin') {
+        if (loggedInMobile) {
+            profileMobileDisplay.textContent = loggedInMobile;
             profileModal.classList.add('active');
         } else {
             loginModal.classList.add('active');
-            setTimeout(() => usernameInput.focus(), 100);
+            setTimeout(() => mobileInput.focus(), 100);
         }
     });
 
@@ -32,31 +52,92 @@ document.addEventListener('DOMContentLoaded', () => {
         profileModal.classList.remove('active');
     });
 
-    usernameInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') loginSubmitBtn.click();
-    });
-    
-    passwordInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') loginSubmitBtn.click();
+    // Open Register Modal from Login Modal
+    openRegisterBtn.addEventListener('click', () => {
+        loginModal.classList.remove('active');
+        loginMessage.textContent = '';
+        registerModal.classList.add('active');
+        setTimeout(() => regMobileInput.focus(), 100);
     });
 
-    loginSubmitBtn.addEventListener('click', () => {
-        const user = usernameInput.value.trim();
+    closeRegisterBtn.addEventListener('click', () => {
+        registerModal.classList.remove('active');
+        registerMessage.textContent = '';
+    });
+
+    // Go back to login from register modal
+    backToLoginBtn.addEventListener('click', () => {
+        registerModal.classList.remove('active');
+        registerMessage.textContent = '';
+        loginModal.classList.add('active');
+        setTimeout(() => mobileInput.focus(), 100);
+    });
+
+    // Enter Key Submissions for Login
+    [mobileInput, passwordInput].forEach(input => {
+        if(input) {
+            input.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') authSubmitBtn.click();
+            });
+        }
+    });
+
+    // Login Submit
+    authSubmitBtn.addEventListener('click', () => {
+        const mobile = mobileInput.value.trim();
         const pass = passwordInput.value.trim();
 
-        if (user === 'admin' && pass === 'admin') {
+        if (!mobile || !pass) {
+            loginMessage.style.color = '#c91818';
+            loginMessage.textContent = 'Please fill in mobile number and password.';
+            return;
+        }
+
+        if ((mobile === '9413425400' && pass === 'admin') || mobile) {
+            loggedInMobile = mobile;
             loginModal.classList.remove('active');
-            loginLink.textContent = 'Admin';
-            usernameInput.value = '';
+            loginLink.textContent = loggedInMobile;
+            mobileInput.value = '';
             passwordInput.value = '';
             loginMessage.textContent = '';
         } else {
             loginMessage.style.color = '#c91818';
-            loginMessage.textContent = 'Invalid username or password.';
+            loginMessage.textContent = 'Invalid mobile number or password.';
         }
     });
 
+    // Register Submit
+    registerSubmitBtn.addEventListener('click', () => {
+        const mobile = regMobileInput.value.trim();
+        const pass = regPasswordInput.value.trim();
+        const address = regAddressInput.value.trim();
+        const pincode = regPincodeInput.value.trim();
+
+        if (!mobile || !pass || !address || !pincode) {
+            registerMessage.style.color = '#c91818';
+            registerMessage.textContent = 'Please fill out all required fields.';
+            return;
+        }
+
+        // Successful registration automatically logs them in
+        loggedInMobile = mobile;
+        registerModal.classList.remove('active');
+        loginLink.textContent = loggedInMobile;
+
+        // Clear register inputs
+        regMobileInput.value = '';
+        regPasswordInput.value = '';
+        regAddressInput.value = '';
+        regPincodeInput.value = '';
+        regRemarksInput.value = '';
+        registerMessage.textContent = '';
+
+        alert('Registration successful! You are now logged in.');
+    });
+
+    // Handle Logout
     logoutBtn.addEventListener('click', () => {
+        loggedInMobile = null;
         loginLink.textContent = 'Login';
         profileModal.classList.remove('active');
         window.location.href = '#home';
@@ -178,16 +259,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const checkoutBtn = document.querySelector('.checkout-btn');
     
     checkoutBtn.addEventListener('click', () => {
-        if (loginLink.textContent !== 'Admin') {
+        if (!loggedInMobile) {
             closeCart();
             loginModal.classList.add('active');
-            setTimeout(() => usernameInput.focus(), 100);
+            setTimeout(() => mobileInput.focus(), 100);
             
             loginMessage.style.color = '#c91818';
             loginMessage.textContent = 'You must log in to proceed to checkout.';
-            
         } else {
-            let orderSummary = "Hello Soni Mehndi Artist! I would like to place an order:%0A%0A";
+            let orderSummary = `Hello Soni Mehndi Artist! I would like to place an order (Mobile: ${loggedInMobile}):%0A%0A`;
             cart.forEach(item => {
                 orderSummary += `- ${item.name} (x${item.quantity}) = ₹${item.price * item.quantity}%0A`;
             });
