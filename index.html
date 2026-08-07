@@ -68,16 +68,23 @@
     </section>
 
     <!-- CHECKOUT / CART DRAWER SECTION -->
-    <section id="cart" class="cart-section">
-        <h2>Your Shopping Cart</h2>
+    <!-- CART SLIDER (Hidden by default, slides in on click) -->
+    <div id="cart-overlay" class="cart-overlay"></div>
+    <div id="cart-slider" class="cart-slider">
+        <div class="cart-header">
+            <h2>Your Cart</h2>
+            <button id="close-cart" class="close-cart-btn">&times;</button>
+        </div>
+        
         <div id="cart-items">
             <p class="empty-cart">Your cart is currently empty.</p>
         </div>
+        
         <div id="cart-total" style="display:none;">
             <h3>Total: ₹<span id="total-amount">0</span></h3>
             <button class="btn checkout-btn">Proceed to WhatsApp Checkout</button>
         </div>
-    </section>
+    </div>
 
     <footer>
         <p>&copy; 2026 Soni Mehndi Artist & Store. All Rights Reserved.</p>
