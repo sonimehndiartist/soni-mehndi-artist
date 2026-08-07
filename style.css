@@ -1,25 +1,23 @@
-/* Modern E-Commerce Color Palette & Layout */
 * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
 
 body { background-color: #faf7f2; color: #2c221e; line-height: 1.6; }
-.hidden { display: none !important; }
 
-/* Overlays (Location, Login, Profile) */
-.location-overlay {
+/* Modals (Login & Profile) */
+.modal-overlay {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
     background: #4a2e2bd4; z-index: 2000; display: none; 
     align-items: center; justify-content: center;
 }
-.location-overlay.active { display: flex; }
-.location-box {
+.modal-overlay.active { display: flex; }
+.modal-box {
     background: white; padding: 40px; border-radius: 10px;
     text-align: center; max-width: 400px; width: 90%;
     box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-    position: relative; /* Needed for the close button */
+    position: relative; 
 }
-.location-box h2 { color: #7b2c22; margin-bottom: 15px; }
-.location-box p { color: #6b5b53; margin-bottom: 20px; }
-.location-box input {
+.modal-box h2 { color: #7b2c22; margin-bottom: 15px; }
+.modal-box p { color: #6b5b53; margin-bottom: 20px; }
+.modal-box input {
     width: 100%; padding: 12px; margin-bottom: 15px;
     border: 1px solid #ccc; border-radius: 5px; font-size: 1rem;
 }
@@ -27,8 +25,7 @@ body { background-color: #faf7f2; color: #2c221e; line-height: 1.6; }
 
 /* Modal Close Button */
 .close-modal-btn {
-    position: absolute;
-    top: 15px; right: 20px;
+    position: absolute; top: 15px; right: 20px;
     background: none; border: none; font-size: 1.8rem;
     color: #2c221e; cursor: pointer; line-height: 1;
 }
@@ -41,18 +38,14 @@ body { background-color: #faf7f2; color: #2c221e; line-height: 1.6; }
     font-weight: bold; cursor: pointer; transition: background-color 0.2s;
 }
 .btn:hover { background-color: #b45309; }
-.alt-btn { background-color: #f2ebe1; color: #7b2c22; border: 2px solid #7b2c22; width: 100%; }
-.alt-btn:hover { background-color: #e6ccb8; color: #5a1f18; }
 #logout-btn:hover { background-color: #9c1010 !important; }
 
-/* Header & Nav Location */
+/* Header & Nav */
 header {
     background-color: #7b2c22; color: white; padding: 1rem 5%;
     display: grid; grid-template-columns: 1fr auto 1fr; align-items: center;
     position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.1);
 }
-
-.nav-location { color: #f4d06f; font-size: 0.95rem; font-weight: 500; display: flex; align-items: center; gap: 5px; justify-self: start; }
 header .logo { 
     font-family: 'Great Vibes', cursive; font-size: 3.8rem; font-weight: normal; 
     letter-spacing: 2px; color: white; justify-self: center; text-align: center; line-height: 1.2; padding: 0 20px;
@@ -113,7 +106,32 @@ section h2 { color: #7b2c22; font-size: 2.2rem; margin-bottom: 10px; }
 #cart-total { background: white; padding: 20px; border-radius: 8px; margin-top: 20px; box-shadow: 0 -2px 10px rgba(0,0,0,0.05); }
 .checkout-btn { width: 100%; margin-top: 15px; }
 
-footer { background-color: #2c221e; color: #e6dfd5; text-align: center; padding: 25px; }
+/* =========================================
+   FOOTER & WHATSAPP FLOATING ICON
+   ========================================= */
+footer { background-color: #2c221e; color: #e6dfd5; text-align: center; padding: 25px; line-height: 1.8; }
+.whatsapp-footer-link { color: #25D366; text-decoration: none; font-weight: bold; }
+.whatsapp-footer-link:hover { text-decoration: underline; }
+
+.floating-whatsapp {
+    position: fixed;
+    bottom: 25px;
+    right: 25px;
+    background-color: #25D366;
+    color: white;
+    border-radius: 50%;
+    width: 65px;
+    height: 65px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    z-index: 1500;
+    transition: transform 0.3s;
+}
+.floating-whatsapp:hover {
+    transform: scale(1.1);
+}
 
 /* Responsive Adjustments for smaller screens */
 @media (max-width: 900px) { 
@@ -122,11 +140,11 @@ footer { background-color: #2c221e; color: #e6dfd5; text-align: center; padding:
     
     header { display: flex; flex-direction: column; padding: 1rem; gap: 15px; text-align: center; }
     header .logo { font-size: 3.2rem; padding: 10px 0; }
-    .nav-location { justify-content: center; width: 100%; }
     nav { width: 100%; }
     header ul { gap: 1rem; flex-wrap: wrap; justify-content: center; width: 100%; }
 }
 @media (max-width: 600px) {
     .hero { padding: 80px 5%; }
     .product-card { width: 100%; max-width: 350px; }
+    .floating-whatsapp { width: 55px; height: 55px; bottom: 15px; right: 15px; }
 }
