@@ -9,6 +9,10 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap" rel="stylesheet">
     
+    <!-- LEAFLET MAP CSS & JS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -56,24 +60,38 @@
         </div>
     </div>
 
-    <!-- ADD NEW ADDRESS MODAL -->
+    <!-- ADD / EDIT DELIVERY ADDRESS MODAL WITH MAP -->
     <div id="new-address-modal" class="modal-overlay">
-        <div class="modal-box">
+        <div class="modal-box" style="max-width: 450px; max-height: 90vh; overflow-y: auto;">
             <button id="close-new-address-btn" class="close-modal-btn">&times;</button>
-            <h2>Add Delivery Address</h2>
-            <p>Enter contact person & address details.</p>
+            <h2 id="address-modal-title">Add Delivery Address</h2>
+            <p>Fetch location coordinates & fill in address details below.</p>
             
-            <input type="text" id="add-contact-person" placeholder="Contact Person Full Name" />
-            <input type="email" id="add-email" placeholder="Email Address" />
-            <input type="tel" id="add-mobile" placeholder="Mobile Number" />
-            <textarea id="add-full-address" placeholder="Full Address (House/Flat No, Area, City, State)" style="width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 5px; font-size: 1rem; resize: vertical; height: 70px;"></textarea>
-            <input type="text" id="add-pincode" placeholder="Pin Code" />
+            <!-- Map & Current Location Button -->
+            <div class="map-section" style="margin-bottom: 15px;">
+                <button type="button" id="fetch-location-btn" class="btn alt-btn" style="width: 100%; margin-bottom: 8px; font-size: 0.9rem; padding: 10px; background-color: #e8f1ff; border-color: #1a73e8; color: #1a73e8;">
+                    📍 Fetch Current Location
+                </button>
+                <div id="location-coords-display" style="font-size: 0.82rem; color: #2e7d32; font-weight: bold; margin-bottom: 8px; min-height: 18px;">
+                    <!-- Latitude and Longitude auto-write here -->
+                </div>
+                <div id="address-map" style="height: 180px; width: 100%; border-radius: 8px; border: 1px solid #ccc;"></div>
+            </div>
+
+            <input type="text" id="add-contact-person" placeholder="Contact Person Full Name *" required />
+            <input type="tel" id="add-mobile" placeholder="Mobile Number *" required />
+            <input type="email" id="add-email" placeholder="Email Address (Optional)" />
+            <textarea id="add-full-address" placeholder="Full Address (House/Flat No, Area, City, State) *" style="width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 5px; font-size: 1rem; resize: vertical; height: 60px;" required></textarea>
+            <input type="text" id="add-pincode" placeholder="Pin Code *" required />
             
             <select id="add-tag-type" style="width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 5px; font-size: 1rem;">
                 <option value="Home">Home</option>
                 <option value="Work">Work</option>
                 <option value="Other">Other</option>
             </select>
+
+            <!-- Dynamic Custom Tag Input -->
+            <input type="text" id="add-custom-tag" class="hidden" placeholder="Specify Other Tag (e.g. Friend's Place) *" />
             
             <button id="save-address-btn" class="btn" style="width: 100%;">Save Address</button>
             <p id="address-form-msg" class="error-msg"></p>
@@ -93,7 +111,7 @@
         </div>
     </div>
 
-    <!-- SEPARATE BRAND BANNER -->
+    <!-- BRAND BANNER -->
     <div class="brand-banner">
         <h1 class="logo">Soni Mehndi Artist</h1>
     </div>
@@ -176,9 +194,32 @@
             <button id="close-cart" class="close-cart-btn">&times;</button>
         </div>
         <div id="cart-items"><p class="empty-cart">Your cart is currently empty.</p></div>
+        
         <div id="cart-total" style="display:none;">
-            <h3>Estimated Total: ₹<span id="total-amount">0</span></h3>
-            <button id="goto-delivery-btn" class="btn checkout-btn">Delivery Address</button>
+            <!-- SELECTED ADDRESS DISPLAY -->
+            <div id="cart-selected-address-box" class="cart-address-banner hidden">
+                <div class="cart-address-title">
+                    <span>Deliver To: <strong id="cart-addr-name"></strong></span>
+                    <button id="change-address-btn" class="change-addr-link">Change</button>
+                </div>
+                <p id="cart-addr-text" class="cart-addr-text"></p>
+            </div>
+
+            <!-- PRICE BREAKDOWN -->
+            <div class="pricing-rows-container">
+                <div class="price-row">
+                    <span>Subtotal:</span>
+                    <span>₹<span id="cart-subtotal-val">0</span></span>
+                </div>
+                <div id="shipping-row" class="price-row hidden">
+                    <span>Shipping Charges:</span>
+                    <span style="color: #2e7d32; font-weight: bold;">₹150</span>
+                </div>
+                <hr style="margin: 8px 0; border: none; border-top: 1px dashed #ccc;">
+                <h3 id="total-label-heading"><span id="total-label-text">Estimated Total</span>: ₹<span id="total-amount">0</span></h3>
+            </div>
+
+            <button id="goto-delivery-btn" class="btn checkout-btn">Select Delivery Address</button>
         </div>
     </div>
 
@@ -201,56 +242,8 @@
         </div>
     </div>
 
-    <!-- NEW: ORDER SUMMARY & PAYMENT TAB -->
-    <div id="summary-slider" class="cart-slider">
-        <div class="cart-header">
-            <h2>Order Summary</h2>
-            <button id="close-summary" class="close-cart-btn">&times;</button>
-        </div>
-
-        <div class="summary-container">
-            <!-- Selected Delivery Address Card -->
-            <div class="summary-section">
-                <h3>Delivery Address</h3>
-                <div id="summary-address-card" class="summary-address-box">
-                    <!-- Populated dynamically -->
-                </div>
-            </div>
-
-            <!-- Order Items Breakdown -->
-            <div class="summary-section">
-                <h3>Order Details</h3>
-                <div id="summary-items-list" class="summary-items-box">
-                    <!-- Populated dynamically -->
-                </div>
-            </div>
-
-            <!-- Pricing Breakdown -->
-            <div class="summary-section pricing-box">
-                <div class="price-row">
-                    <span>Items Subtotal:</span>
-                    <span>₹<span id="summary-subtotal">0</span></span>
-                </div>
-                <div class="price-row">
-                    <span>Shipping Charges:</span>
-                    <span style="color: #2e7d32; font-weight: bold;">₹<span id="summary-shipping">50</span></span>
-                </div>
-                <hr style="margin: 10px 0; border: none; border-top: 1px dashed #ccc;">
-                <div class="price-row grand-total-row">
-                    <span>Total Amount Payable:</span>
-                    <span>₹<span id="summary-grand-total">0</span></span>
-                </div>
-            </div>
-
-            <!-- Make Payment Button -->
-            <button id="make-payment-btn" class="btn checkout-btn" style="background-color: #25D366; font-size: 1.1rem; padding: 15px; margin-top: 20px;">
-                Make Payment
-            </button>
-        </div>
-    </div>
-
     <!-- FLOATING WHATSAPP BUTTON -->
-    <a href="https://wa.me/919413425400" class="floating-whatsapp" target="_blank" title="Chat with us on WhatsApp">
+    <a href="https://wa.me/919413425400" id="floating-whatsapp" class="floating-whatsapp" target="_blank" title="Chat with us on WhatsApp">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 308 308" width="40" height="40" fill="#FFFFFF">
             <path d="M227.904,176.981c-0.6-0.288-23.054-11.345-27.044-12.781c-3.99-1.436-6.898-2.155-9.805,2.155
             c-2.908,4.309-11.23,14.155-13.76,17.032c-2.53,2.878-5.06,3.238-9.369,1.078c-4.309-2.156-18.196-6.708-34.664-21.399

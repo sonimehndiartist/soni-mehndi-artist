@@ -1,7 +1,112 @@
 document.addEventListener('DOMContentLoaded', () => {
     let cart = [];
     let currentUser = null; 
-    let addressesList = []; // Dynamic list of saved delivery addresses
+    let addressesList = []; 
+    let selectedAddress = null; 
+    let editingAddressId = null; 
+    let pendingRedirectToAddress = false; 
+    let currentCoords = null; // Stores { lat, lng } when fetched
+    const SHIPPING_CHARGE = 150;
+
+    // Leaflet Map variables
+    let addressMap = null;
+    let mapMarker = null;
+
+    const floatingWhatsapp = document.getElementById('floating-whatsapp');
+    const locationCoordsDisplay = document.getElementById('location-coords-display');
+
+    function updateWhatsappVisibility() {
+        const isCartOpen = cartSlider.classList.contains('open');
+        const isAddressOpen = addressSlider.classList.contains('open');
+
+        if (isCartOpen || isAddressOpen) {
+            floatingWhatsapp.classList.add('hidden');
+        } else {
+            floatingWhatsapp.classList.remove('hidden');
+        }
+    }
+
+    // --- LEAFLET MAP & GEOLOCATION LOGIC ---
+    function initAddressMap(lat = 23.0225, lng = 72.5714) { // Default Ahmedabad coordinates
+        setTimeout(() => {
+            if (!addressMap) {
+                addressMap = L.map('address-map').setView([lat, lng], 13);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    maxZoom: 19,
+                    attribution: '© OpenStreetMap'
+                }).addTo(addressMap);
+
+                mapMarker = L.marker([lat, lng], { draggable: true }).addTo(addressMap);
+
+                mapMarker.on('dragend', function() {
+                    const pos = mapMarker.getLatLng();
+                    recordCoordinates(pos.lat, pos.lng);
+                });
+
+                addressMap.on('click', function(e) {
+                    mapMarker.setLatLng(e.latlng);
+                    recordCoordinates(e.lat, e.lng);
+                });
+            } else {
+                addressMap.setView([lat, lng], 13);
+                mapMarker.setLatLng([lat, lng]);
+            }
+            addressMap.invalidateSize();
+        }, 300);
+    }
+
+    function recordCoordinates(lat, lng) {
+        currentCoords = { lat: lat.toFixed(5), lng: lng.toFixed(5) };
+        locationCoordsDisplay.textContent = `Captured GPS: Lat ${currentCoords.lat}, Lng ${currentCoords.lng}`;
+        reverseGeocodePincodeOnly(lat, lng);
+    }
+
+    // Extracted Pincode only from Nominatim without overwriting full address text
+    function reverseGeocodePincodeOnly(lat, lng) {
+        fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data) {
+                    const addressObj = data.address || {};
+                    let foundPin = addressObj.postcode;
+                    if (!foundPin && data.display_name) {
+                        const match = data.display_name.match(/\b\d{6}\b/);
+                        if (match) foundPin = match[0];
+                    }
+
+                    if (foundPin) {
+                        addPincode.value = foundPin;
+                    }
+                }
+            })
+            .catch(err => console.log('Pincode fetch error:', err));
+    }
+
+    // Fetch Current Location Button Click
+    document.getElementById('fetch-location-btn').addEventListener('click', () => {
+        const btn = document.getElementById('fetch-location-btn');
+        btn.textContent = "⌛ Fetching Location...";
+
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    const lat = pos.coords.latitude;
+                    const lng = pos.coords.longitude;
+                    initAddressMap(lat, lng);
+                    recordCoordinates(lat, lng);
+                    btn.textContent = "📍 Fetch Current Location";
+                },
+                (err) => {
+                    btn.textContent = "📍 Fetch Current Location";
+                    alert('Could not fetch location. Please check browser location permissions or click on the map directly.');
+                },
+                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+            );
+        } else {
+            btn.textContent = "📍 Fetch Current Location";
+            alert('Geolocation is not supported by your browser.');
+        }
+    });
 
     // --- LOGIN & REGISTER LOGIC ---
     const loginLink = document.getElementById('login-link');
@@ -27,19 +132,31 @@ document.addEventListener('DOMContentLoaded', () => {
     const registerMessage = document.getElementById('register-message');
     const backToLoginBtn = document.getElementById('back-to-login-btn');
 
-    // New Address Modal elements
+    // Address Modal elements
     const triggerAddAddressBtn = document.getElementById('trigger-add-address-modal');
     const newAddressModal = document.getElementById('new-address-modal');
     const closeNewAddressBtn = document.getElementById('close-new-address-btn');
+    const addressModalTitle = document.getElementById('address-modal-title');
     const addContactPerson = document.getElementById('add-contact-person');
     const addEmail = document.getElementById('add-email');
     const addMobile = document.getElementById('add-mobile');
     const addFullAddress = document.getElementById('add-full-address');
     const addPincode = document.getElementById('add-pincode');
     const addTagType = document.getElementById('add-tag-type');
+    const addCustomTag = document.getElementById('add-custom-tag');
     const saveAddressBtn = document.getElementById('save-address-btn');
     const addressFormMsg = document.getElementById('address-form-msg');
     const addressCardsList = document.getElementById('address-cards-list');
+
+    // Toggle Custom Tag Input Field
+    addTagType.addEventListener('change', () => {
+        if (addTagType.value === 'Other') {
+            addCustomTag.classList.remove('hidden');
+        } else {
+            addCustomTag.classList.add('hidden');
+            addCustomTag.value = '';
+        }
+    });
 
     // Profile elements
     const profileModal = document.getElementById('profile-modal');
@@ -47,6 +164,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const logoutBtn = document.getElementById('logout-btn');
     const profileNameDisplay = document.getElementById('profile-name-display');
     const profileMobileDisplay = document.getElementById('profile-mobile-display');
+
+    // Cart tab Address elements
+    const cartSelectedAddressBox = document.getElementById('cart-selected-address-box');
+    const cartAddrName = document.getElementById('cart-addr-name');
+    const cartAddrText = document.getElementById('cart-addr-text');
+    const changeAddressBtn = document.getElementById('change-address-btn');
+    const shippingRow = document.getElementById('shipping-row');
+    const cartSubtotalVal = document.getElementById('cart-subtotal-val');
+    const totalLabelText = document.getElementById('total-label-text');
 
     loginLink.addEventListener('click', (e) => {
         e.preventDefault();
@@ -88,50 +214,98 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => mobileInput.focus(), 100);
     });
 
-    // Add New Address Modal Toggle
+    // Open Modal for "Add New Address" (Form strictly requires user input)
     triggerAddAddressBtn.addEventListener('click', () => {
-        newAddressModal.classList.add('active');
+        editingAddressId = null;
+        currentCoords = null;
+        locationCoordsDisplay.textContent = '';
+        addressModalTitle.textContent = 'Add Delivery Address';
+        addContactPerson.value = '';
+        addEmail.value = '';
+        addMobile.value = '';
+        addFullAddress.value = '';
+        addPincode.value = '';
+        addTagType.value = 'Home';
+        addCustomTag.value = '';
+        addCustomTag.classList.add('hidden');
         addressFormMsg.textContent = '';
+        newAddressModal.classList.add('active');
+        initAddressMap();
     });
 
     closeNewAddressBtn.addEventListener('click', () => {
         newAddressModal.classList.remove('active');
     });
 
-    // Save New Address
+    // Save or Update Address (Strict Validation & Custom Tag)
     saveAddressBtn.addEventListener('click', () => {
         const contactPerson = addContactPerson.value.trim();
         const email = addEmail.value.trim();
         const mobile = addMobile.value.trim();
         const fullAddr = addFullAddress.value.trim();
         const pincode = addPincode.value.trim();
-        const tag = addTagType.value;
+        
+        let tag = addTagType.value;
+        if (tag === 'Other') {
+            const customTagVal = addCustomTag.value.trim();
+            if (!customTagVal) {
+                addressFormMsg.style.color = '#c91818';
+                addressFormMsg.textContent = 'Please specify custom tag name.';
+                return;
+            }
+            tag = customTagVal;
+        }
 
-        if (!contactPerson || !email || !mobile || !fullAddr || !pincode) {
+        // Strict Mandatory Validation
+        if (!contactPerson || !mobile || !fullAddr || !pincode) {
             addressFormMsg.style.color = '#c91818';
-            addressFormMsg.textContent = 'Please fill out all address details.';
+            addressFormMsg.textContent = 'Contact Person, Mobile Number, Full Address, and Pin Code are required.';
             return;
         }
 
-        const newAddressObj = {
-            id: Date.now(),
-            contactPerson,
-            email,
-            mobile,
-            fullAddr: `${fullAddr}, ${pincode}`,
-            tag
-        };
+        const formattedAddress = `${fullAddr}, ${pincode}`;
 
-        addressesList.push(newAddressObj);
+        if (editingAddressId !== null) {
+            const addrIndex = addressesList.findIndex(a => a.id === editingAddressId);
+            if (addrIndex !== -1) {
+                addressesList[addrIndex] = {
+                    id: editingAddressId,
+                    contactPerson,
+                    email,
+                    mobile,
+                    fullAddr: formattedAddress,
+                    tag,
+                    coords: currentCoords ? { ...currentCoords } : addressesList[addrIndex].coords
+                };
+                if (selectedAddress && selectedAddress.id === editingAddressId) {
+                    selectedAddress = addressesList[addrIndex];
+                }
+            }
+        } else {
+            const newAddressObj = {
+                id: Date.now(),
+                contactPerson,
+                email,
+                mobile,
+                fullAddr: formattedAddress,
+                tag,
+                coords: currentCoords ? { ...currentCoords } : null
+            };
+            addressesList.push(newAddressObj);
+        }
+
         renderAddressCards();
+        updateAllUI();
 
-        // Clear and close modal
         addContactPerson.value = '';
         addEmail.value = '';
         addMobile.value = '';
         addFullAddress.value = '';
         addPincode.value = '';
+        addCustomTag.value = '';
+        addCustomTag.classList.add('hidden');
         addressFormMsg.textContent = '';
+        editingAddressId = null;
         newAddressModal.classList.remove('active');
     });
 
@@ -143,17 +317,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let html = '';
         addressesList.forEach((addr, index) => {
-            const isSelected = index === 0 ? 'selected-card' : '';
+            const isSelected = selectedAddress && selectedAddress.id === addr.id ? 'selected-card' : (index === 0 && !selectedAddress ? 'selected-card' : '');
             html += `
                 <div class="ui-address-card ${isSelected}">
                     <div class="ui-card-header">
                         <span class="ui-card-name">${addr.contactPerson}</span>
                         <span class="ui-card-tag">${addr.tag}</span>
-                        <span class="ui-card-more">&#8942;</span>
+                        
+                        <div class="ui-card-more-container">
+                            <span class="ui-card-more" data-id="${addr.id}">&#8942;</span>
+                            <div class="card-menu-dropdown" id="dropdown-${addr.id}">
+                                <button class="card-menu-item edit-addr-btn" data-id="${addr.id}">Edit</button>
+                                <button class="card-menu-item delete-item delete-addr-btn" data-id="${addr.id}">Delete</button>
+                            </div>
+                        </div>
                     </div>
                     <p class="ui-card-address">${addr.fullAddr}</p>
-                    <p class="ui-card-contact">${addr.email}</p>
+                    <p class="ui-card-contact">${addr.email ? addr.email : ''}</p>
                     <p class="ui-card-contact">${addr.mobile}</p>
+                    ${addr.coords ? `<p style="font-size: 0.75rem; color: #2e7d32; margin-top: 4px;">📍 GPS: Lat ${addr.coords.lat}, Lng ${addr.coords.lng}</p>` : ''}
                     <button class="deliver-here-btn" data-id="${addr.id}">Deliver Here</button>
                 </div>
             `;
@@ -197,6 +379,13 @@ document.addEventListener('DOMContentLoaded', () => {
         mobileInput.value = '';
         passwordInput.value = '';
         loginMessage.textContent = '';
+
+        if (pendingRedirectToAddress) {
+            pendingRedirectToAddress = false;
+            addressSlider.classList.add('open');
+            cartOverlay.classList.add('active');
+            updateWhatsappVisibility();
+        }
     });
 
     registerSubmitBtn.addEventListener('click', () => {
@@ -226,12 +415,21 @@ document.addEventListener('DOMContentLoaded', () => {
         registerMessage.textContent = '';
 
         alert(`Registration successful! Welcome, ${currentUser.name}. You are now logged in.`);
+
+        if (pendingRedirectToAddress) {
+            pendingRedirectToAddress = false;
+            addressSlider.classList.add('open');
+            cartOverlay.classList.add('active');
+            updateWhatsappVisibility();
+        }
     });
 
     logoutBtn.addEventListener('click', () => {
         currentUser = null;
+        selectedAddress = null;
         loginLink.textContent = 'Login';
         profileModal.classList.remove('active');
+        updateAllUI();
         window.location.href = '#home';
     });
 
@@ -255,53 +453,144 @@ document.addEventListener('DOMContentLoaded', () => {
         addressSlider.classList.remove('open');
         cartSlider.classList.add('open');
         cartOverlay.classList.add('active');
+        updateWhatsappVisibility();
     });
 
     function closeAllSliders() {
         cartSlider.classList.remove('open');
         addressSlider.classList.remove('open');
         cartOverlay.classList.remove('active');
+        updateWhatsappVisibility();
     }
 
     closeCartBtn.addEventListener('click', closeAllSliders);
     closeAddressBtn.addEventListener('click', closeAllSliders);
     cartOverlay.addEventListener('click', closeAllSliders);
 
-    // Open Delivery Address tab from Cart Slider
     gotoDeliveryBtn.addEventListener('click', () => {
+        if (selectedAddress && gotoDeliveryBtn.textContent === "Make Payment Now") {
+            let orderSummary = `Hello Soni Mehndi Artist! I would like to place an order:%0A%0A` +
+                `*Customer:* ${selectedAddress.contactPerson}%0A` +
+                `*Mobile:* ${selectedAddress.mobile}%0A` +
+                (selectedAddress.email ? `*Email:* ${selectedAddress.email}%0A` : '') +
+                `*Delivery Address (${selectedAddress.tag}):* ${selectedAddress.fullAddr}%0A` +
+                (selectedAddress.coords ? `*Location Coordinates:* Lat ${selectedAddress.coords.lat}, Lng ${selectedAddress.coords.lng}%0A` : '') +
+                `%0A*Order Items:*%0A`;
+
+            let subtotal = 0;
+            cart.forEach(item => {
+                let itemTotal = item.price * item.quantity;
+                subtotal += itemTotal;
+                orderSummary += `- ${item.name} (${item.unit}) x${item.quantity} = ₹${itemTotal}%0A`;
+            });
+
+            orderSummary += `%0A*Subtotal:* ₹${subtotal}` +
+                `%0A*Shipping Charges:* ₹${SHIPPING_CHARGE}` +
+                `%0A*Total Amount Payable:* ₹${subtotal + SHIPPING_CHARGE}`;
+
+            window.open(`https://wa.me/919413425400?text=${orderSummary}`, '_blank');
+            return;
+        }
+
         if (!currentUser) {
             closeAllSliders();
+            pendingRedirectToAddress = true; 
             loginModal.classList.add('active');
             setTimeout(() => mobileInput.focus(), 100);
             loginMessage.style.color = '#c91818';
-            loginMessage.textContent = 'You must log in to proceed to delivery address.';
+            loginMessage.textContent = 'Please log in to continue to delivery address.';
         } else {
             cartSlider.classList.remove('open');
             addressSlider.classList.add('open');
+            updateWhatsappVisibility();
         }
     });
 
-    // Handle "Deliver Here" click -> WhatsApp redirect with full order & address summary
+    changeAddressBtn.addEventListener('click', () => {
+        cartSlider.classList.remove('open');
+        addressSlider.classList.add('open');
+        updateWhatsappVisibility();
+    });
+
+    // Event Delegation for Card Actions & Dropdowns
     document.body.addEventListener('click', (e) => {
+        if (e.target.classList.contains('ui-card-more')) {
+            e.stopPropagation();
+            const id = parseInt(e.target.getAttribute('data-id'));
+            const dropdown = document.getElementById(`dropdown-${id}`);
+
+            document.querySelectorAll('.card-menu-dropdown').forEach(d => {
+                if (d !== dropdown) d.classList.remove('active');
+            });
+
+            if (dropdown) dropdown.classList.toggle('active');
+            return;
+        }
+
+        if (!e.target.closest('.ui-card-more-container')) {
+            document.querySelectorAll('.card-menu-dropdown').forEach(d => d.classList.remove('active'));
+        }
+
+        // Edit Address Handler
+        if (e.target.classList.contains('edit-addr-btn')) {
+            const id = parseInt(e.target.getAttribute('data-id'));
+            const addr = addressesList.find(a => a.id === id);
+            if (addr) {
+                editingAddressId = id;
+                addressModalTitle.textContent = 'Edit Delivery Address';
+                addContactPerson.value = addr.contactPerson;
+                addEmail.value = addr.email || '';
+                addMobile.value = addr.mobile;
+
+                const parts = addr.fullAddr.split(', ');
+                const pincode = parts.pop() || '';
+                addFullAddress.value = parts.join(', ');
+                addPincode.value = pincode;
+
+                if (['Home', 'Work'].includes(addr.tag)) {
+                    addTagType.value = addr.tag;
+                    addCustomTag.classList.add('hidden');
+                    addCustomTag.value = '';
+                } else {
+                    addTagType.value = 'Other';
+                    addCustomTag.classList.remove('hidden');
+                    addCustomTag.value = addr.tag;
+                }
+
+                currentCoords = addr.coords ? { ...addr.coords } : null;
+                if (currentCoords) {
+                    locationCoordsDisplay.textContent = `Captured GPS: Lat ${currentCoords.lat}, Lng ${currentCoords.lng}`;
+                } else {
+                    locationCoordsDisplay.textContent = '';
+                }
+
+                newAddressModal.classList.add('active');
+                initAddressMap(currentCoords ? parseFloat(currentCoords.lat) : 23.0225, currentCoords ? parseFloat(currentCoords.lng) : 72.5714);
+            }
+        }
+
+        // Delete Address Handler
+        if (e.target.classList.contains('delete-addr-btn')) {
+            const id = parseInt(e.target.getAttribute('data-id'));
+            addressesList = addressesList.filter(a => a.id !== id);
+            if (selectedAddress && selectedAddress.id === id) {
+                selectedAddress = null;
+            }
+            renderAddressCards();
+            updateAllUI();
+        }
+
+        // Deliver Here Handler
         if (e.target.classList.contains('deliver-here-btn')) {
             const addrId = parseInt(e.target.getAttribute('data-id'));
-            const chosenAddr = addressesList.find(a => a.id === addrId);
+            selectedAddress = addressesList.find(a => a.id === addrId);
 
-            if (chosenAddr) {
-                let orderSummary = `Hello Soni Mehndi Artist! I would like to place an order:%0A%0A` +
-                    `*Customer:* ${chosenAddr.contactPerson}%0A` +
-                    `*Mobile:* ${chosenAddr.mobile}%0A` +
-                    `*Email:* ${chosenAddr.email}%0A` +
-                    `*Delivery Address (${chosenAddr.tag}):* ${chosenAddr.fullAddr}%0A%0A` +
-                    `*Order Items:*%0A`;
-
-                cart.forEach(item => {
-                    orderSummary += `- ${item.name} (${item.unit}) x${item.quantity} = ₹${item.price * item.quantity}%0A`;
-                });
-
-                orderSummary += `%0A*Estimated Total:* ₹${totalAmountSpan.textContent}`;
-
-                window.open(`https://wa.me/919413425400?text=${orderSummary}`, '_blank');
+            if (selectedAddress) {
+                renderAddressCards();
+                updateAllUI();
+                addressSlider.classList.remove('open');
+                cartSlider.classList.add('open');
+                updateWhatsappVisibility();
             }
         }
         else if (e.target.classList.contains('add-to-cart-btn')) {
@@ -369,15 +658,16 @@ document.addEventListener('DOMContentLoaded', () => {
         if (cart.length === 0) {
             cartItemsContainer.innerHTML = '<p class="empty-cart">Your cart is currently empty.</p>';
             cartTotalDiv.style.display = 'none';
+            selectedAddress = null; 
             return;
         }
 
         let cartHTML = '';
-        let totalPrice = 0;
+        let subtotalPrice = 0;
 
         cart.forEach(item => {
             let itemTotal = item.price * item.quantity;
-            totalPrice += itemTotal;
+            subtotalPrice += itemTotal;
             cartHTML += `
                 <div class="cart-row">
                     <div class="cart-item-info">
@@ -397,7 +687,29 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         cartItemsContainer.innerHTML = cartHTML;
-        totalAmountSpan.textContent = totalPrice;
+        cartSubtotalVal.textContent = subtotalPrice;
+
+        if (selectedAddress) {
+            cartSelectedAddressBox.classList.remove('hidden');
+            cartAddrName.textContent = `${selectedAddress.contactPerson} (${selectedAddress.tag})`;
+            cartAddrText.textContent = selectedAddress.fullAddr;
+
+            shippingRow.classList.remove('hidden');
+            totalLabelText.textContent = "Total";
+            totalAmountSpan.textContent = subtotalPrice + SHIPPING_CHARGE;
+
+            gotoDeliveryBtn.textContent = "Make Payment Now";
+            gotoDeliveryBtn.style.backgroundColor = "#25D366";
+        } else {
+            cartSelectedAddressBox.classList.add('hidden');
+            shippingRow.classList.add('hidden');
+            totalLabelText.textContent = "Estimated Total";
+            totalAmountSpan.textContent = subtotalPrice;
+
+            gotoDeliveryBtn.textContent = "Select Delivery Address";
+            gotoDeliveryBtn.style.backgroundColor = "#d97706";
+        }
+
         cartTotalDiv.style.display = 'block';
     }
 
