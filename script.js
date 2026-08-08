@@ -1,6 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
     let cart = [];
-    let currentUser = null; 
     let addressesList = []; 
     let selectedAddress = null; 
     let editingAddressId = null; 
@@ -8,12 +7,21 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentCoords = null; 
     const SHIPPING_CHARGE = 150;
 
-    // Leaflet Map variables
-    let addressMap = null;
-    let mapMarker = null;
+    // RESTORE USER SESSION FROM LOCALSTORAGE ON PAGE LOAD
+    let currentUser = JSON.parse(localStorage.getItem('currentUser')) || null;
 
     const floatingWhatsapp = document.getElementById('floating-whatsapp');
     const locationCoordsDisplay = document.getElementById('location-coords-display');
+
+    // UI & Navigation elements
+    const loginLink = document.getElementById('login-link');
+    const loginModal = document.getElementById('login-modal');
+    const closeLoginBtn = document.getElementById('close-login-btn');
+
+    // Automatically set Navigation link if user is already logged in
+    if (currentUser) {
+        loginLink.textContent = currentUser.name;
+    }
 
     function updateWhatsappVisibility() {
         const isCartOpen = cartSlider.classList.contains('open');
@@ -26,7 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Party Shots (Confetti Burst Triggered as Order Summary Opens)
+    // Party Shots (Confetti Burst)
     function triggerPartyConfetti() {
         if (typeof confetti === 'function') {
             const count = 220;
@@ -41,12 +49,15 @@ document.addEventListener('DOMContentLoaded', () => {
             fire(0.25, { spread: 35, startVelocity: 60 });
             fire(0.2, { spread: 70 });
             fire(0.35, { spread: 110, decay: 0.91, scalar: 0.9 });
-            fire(0.1, { spread: 130, startVelocity: 30, decay: 0.92, scalar: 1.2 });
+            fire(0.1, { spread: 130, startVelocity: 25, decay: 0.92, scalar: 1.2 });
             fire(0.1, { spread: 130, startVelocity: 50 });
         }
     }
 
     // --- LEAFLET MAP & GEOLOCATION LOGIC ---
+    let addressMap = null;
+    let mapMarker = null;
+
     function initAddressMap(lat = 23.0225, lng = 72.5714) {
         setTimeout(() => {
             if (!addressMap) {
@@ -127,10 +138,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // --- LOGIN & REGISTER LOGIC ---
-    const loginLink = document.getElementById('login-link');
-    const loginModal = document.getElementById('login-modal');
-    const closeLoginBtn = document.getElementById('close-login-btn');
-    
     const mobileInput = document.getElementById('mobile-input');
     const passwordInput = document.getElementById('password-input');
     const authSubmitBtn = document.getElementById('auth-submit-btn');
@@ -399,6 +406,9 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        // SAVE USER TO LOCALSTORAGE
+        localStorage.setItem('currentUser', JSON.stringify(currentUser));
+
         loginModal.classList.remove('active');
         loginLink.textContent = currentUser.name;
         mobileInput.value = '';
@@ -427,8 +437,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         currentUser = { name: name, mobile: mobile };
+
+        // SAVE REGISTERED USER TO LOCALSTORAGE
+        localStorage.setItem('currentUser', JSON.stringify(currentUser));
+
         registerModal.classList.remove('active');
-        
         loginLink.textContent = currentUser.name;
 
         regNameInput.value = '';
@@ -452,324 +465,9 @@ document.addEventListener('DOMContentLoaded', () => {
     logoutBtn.addEventListener('click', () => {
         currentUser = null;
         selectedAddress = null;
+        localStorage.removeItem('currentUser'); // CLEAR USER FROM LOCALSTORAGE
         loginLink.textContent = 'Login';
         profileModal.classList.remove('active');
         updateAllUI();
         window.location.href = '#home';
     });
-
-    // --- PAYMENT & CONFIRMATION HANDLERS ---
-    paymentCancelBtn.addEventListener('click', () => {
-        paymentModal.classList.remove('active');
-    });
-
-    paymentPaidBtn.addEventListener('click', () => {
-        paymentModal.classList.remove('active');
-
-        // Populate Order Confirmation / Summary Modal
-        if (selectedAddress) {
-            confirmAddrPerson.textContent = `${selectedAddress.contactPerson} (${selectedAddress.tag})`;
-            confirmAddrText.textContent = selectedAddress.fullAddr;
-            confirmAddrContact.textContent = `Mobile: ${selectedAddress.mobile}${selectedAddress.email ? ' | Email: ' + selectedAddress.email : ''}`;
-        }
-
-        let itemsHtml = '';
-        let subtotal = 0;
-        cart.forEach(item => {
-            let itemTotal = item.price * item.quantity;
-            subtotal += itemTotal;
-            itemsHtml += `
-                <div style="display:flex; justify-content:space-between; margin-bottom: 6px; font-size: 0.9rem;">
-                    <span>${item.name} (${item.unit}) x ${item.quantity}</span>
-                    <span style="font-weight:bold;">₹${itemTotal}</span>
-                </div>
-            `;
-        });
-        itemsHtml += `
-            <div style="display:flex; justify-content:space-between; font-size: 0.85rem; color: #666; margin-top: 4px;">
-                <span>Shipping Charges:</span>
-                <span>₹${SHIPPING_CHARGE}</span>
-            </div>
-        `;
-
-        confirmOrderItems.innerHTML = itemsHtml;
-        const finalVal = subtotal + SHIPPING_CHARGE;
-        confirmTotalVal.textContent = finalVal;
-
-        // Open Order Summary Modal
-        orderConfirmModal.classList.add('active');
-
-        // Trigger Festive Party Confetti Burst immediately as Order Summary opens
-        setTimeout(() => {
-            triggerPartyConfetti();
-        }, 100);
-    });
-
-    // CLOSE ORDER SUMMARY & EMPTY CART LOGIC
-    closeConfirmBtn.addEventListener('click', () => {
-        orderConfirmModal.classList.remove('active');
-        cart = []; // Empty cart
-        selectedAddress = null; // Clear selected address
-        updateAllUI(); // Refresh UI to reflect empty cart
-    });
-
-    // --- CART & ADDRESS SLIDER LOGIC ---
-    const cartBadge = document.getElementById('cart-badge');
-    const cartHeaderCount = document.getElementById('cart-header-count');
-    const cartLink = document.getElementById('cart-link');
-    const cartSlider = document.getElementById('cart-slider');
-    const addressSlider = document.getElementById('address-slider');
-    const cartOverlay = document.getElementById('cart-overlay');
-    const closeCartBtn = document.getElementById('close-cart');
-    const closeAddressBtn = document.getElementById('close-address');
-    const cartItemsContainer = document.getElementById('cart-items');
-    const cartTotalDiv = document.getElementById('cart-total');
-    const totalAmountSpan = document.getElementById('total-amount');
-    const gotoDeliveryBtn = document.getElementById('goto-delivery-btn');
-
-    cartLink.addEventListener('click', (e) => {
-        e.preventDefault(); 
-        addressSlider.classList.remove('open');
-        cartSlider.classList.add('open');
-        cartOverlay.classList.add('active');
-        updateWhatsappVisibility();
-    });
-
-    function closeAllSliders() {
-        cartSlider.classList.remove('open');
-        addressSlider.classList.remove('open');
-        cartOverlay.classList.remove('active');
-        updateWhatsappVisibility();
-    }
-
-    closeCartBtn.addEventListener('click', closeAllSliders);
-    closeAddressBtn.addEventListener('click', closeAllSliders);
-    cartOverlay.addEventListener('click', closeAllSliders);
-
-    gotoDeliveryBtn.addEventListener('click', () => {
-        if (selectedAddress && gotoDeliveryBtn.textContent === "Make Payment Now") {
-            closeAllSliders();
-            paymentModal.classList.add('active');
-            return;
-        }
-
-        if (!currentUser) {
-            closeAllSliders();
-            pendingRedirectToAddress = true; 
-            loginModal.classList.add('active');
-            setTimeout(() => mobileInput.focus(), 100);
-            loginMessage.style.color = '#c91818';
-            loginMessage.textContent = 'Please log in to continue to delivery address.';
-        } else {
-            cartSlider.classList.remove('open');
-            addressSlider.classList.add('open');
-            updateWhatsappVisibility();
-        }
-    });
-
-    changeAddressBtn.addEventListener('click', () => {
-        cartSlider.classList.remove('open');
-        addressSlider.classList.add('open');
-        updateWhatsappVisibility();
-    });
-
-    // Event Delegation
-    document.body.addEventListener('click', (e) => {
-        if (e.target.classList.contains('ui-card-more')) {
-            e.stopPropagation();
-            const id = parseInt(e.target.getAttribute('data-id'));
-            const dropdown = document.getElementById(`dropdown-${id}`);
-
-            document.querySelectorAll('.card-menu-dropdown').forEach(d => {
-                if (d !== dropdown) d.classList.remove('active');
-            });
-
-            if (dropdown) dropdown.classList.toggle('active');
-            return;
-        }
-
-        if (!e.target.closest('.ui-card-more-container')) {
-            document.querySelectorAll('.card-menu-dropdown').forEach(d => d.classList.remove('active'));
-        }
-
-        if (e.target.classList.contains('edit-addr-btn')) {
-            const id = parseInt(e.target.getAttribute('data-id'));
-            const addr = addressesList.find(a => a.id === id);
-            if (addr) {
-                editingAddressId = id;
-                addressModalTitle.textContent = 'Edit Delivery Address';
-                addContactPerson.value = addr.contactPerson;
-                addEmail.value = addr.email || '';
-                addMobile.value = addr.mobile;
-
-                const parts = addr.fullAddr.split(', ');
-                const pincode = parts.pop() || '';
-                addFullAddress.value = parts.join(', ');
-                addPincode.value = pincode;
-
-                if (['Home', 'Work'].includes(addr.tag)) {
-                    addTagType.value = addr.tag;
-                    addCustomTag.classList.add('hidden');
-                    addCustomTag.value = '';
-                } else {
-                    addTagType.value = 'Other';
-                    addCustomTag.classList.remove('hidden');
-                    addCustomTag.value = addr.tag;
-                }
-
-                currentCoords = addr.coords ? { ...addr.coords } : null;
-                if (currentCoords) {
-                    locationCoordsDisplay.textContent = `Captured GPS: Lat ${currentCoords.lat}, Lng ${currentCoords.lng}`;
-                } else {
-                    locationCoordsDisplay.textContent = '';
-                }
-
-                newAddressModal.classList.add('active');
-                initAddressMap(currentCoords ? parseFloat(currentCoords.lat) : 23.0225, currentCoords ? parseFloat(currentCoords.lng) : 72.5714);
-            }
-        }
-
-        if (e.target.classList.contains('delete-addr-btn')) {
-            const id = parseInt(e.target.getAttribute('data-id'));
-            addressesList = addressesList.filter(a => a.id !== id);
-            if (selectedAddress && selectedAddress.id === id) {
-                selectedAddress = null;
-            }
-            renderAddressCards();
-            updateAllUI();
-        }
-
-        if (e.target.classList.contains('deliver-here-btn')) {
-            const addrId = parseInt(e.target.getAttribute('data-id'));
-            selectedAddress = addressesList.find(a => a.id === addrId);
-
-            if (selectedAddress) {
-                renderAddressCards();
-                updateAllUI();
-                addressSlider.classList.remove('open');
-                cartSlider.classList.add('open');
-                updateWhatsappVisibility();
-            }
-        }
-        else if (e.target.classList.contains('add-to-cart-btn')) {
-            const name = e.target.getAttribute('data-name');
-            const unit = e.target.getAttribute('data-unit');
-            const price = parseFloat(e.target.getAttribute('data-price'));
-            cart.push({ name, unit, price, quantity: 1 });
-            updateAllUI();
-        }
-        else if (e.target.classList.contains('increase-qty')) {
-            const name = e.target.getAttribute('data-name');
-            const item = cart.find(i => i.name === name);
-            if (item) { item.quantity += 1; updateAllUI(); }
-        }
-        else if (e.target.classList.contains('decrease-qty')) {
-            const name = e.target.getAttribute('data-name');
-            const item = cart.find(i => i.name === name);
-            if (item) {
-                item.quantity -= 1;
-                if (item.quantity <= 0) { cart = cart.filter(i => i.name !== name); }
-                updateAllUI();
-            }
-        }
-        else if (e.target.classList.contains('remove-item-btn')) {
-            const name = e.target.getAttribute('data-name');
-            cart = cart.filter(i => i.name !== name);
-            updateAllUI();
-        }
-    });
-
-    function updateAllUI() {
-        const totalCount = cart.reduce((sum, item) => sum + item.quantity, 0);
-        
-        cartHeaderCount.textContent = `${totalCount} ${totalCount === 1 ? 'Item' : 'Items'}`;
-
-        cartBadge.textContent = totalCount;
-        if (totalCount > 0) {
-            cartBadge.style.display = 'flex';
-        } else {
-            cartBadge.style.display = 'none';
-        }
-
-        const productActionAreas = document.querySelectorAll('.product-actions');
-        productActionAreas.forEach(area => {
-            const name = area.getAttribute('data-name');
-            const unit = area.getAttribute('data-unit');
-            const price = area.getAttribute('data-price');
-            const itemInCart = cart.find(i => i.name === name);
-
-            if (itemInCart) {
-                area.innerHTML = `
-                    <div class="qty-selector">
-                        <button class="qty-btn decrease-qty" data-name="${name}">-</button>
-                        <span class="qty-text">${itemInCart.quantity}</span>
-                        <button class="qty-btn increase-qty" data-name="${name}">+</button>
-                    </div>
-                `;
-            } else {
-                area.innerHTML = `
-                    <button class="add-to-cart-btn" data-name="${name}" data-unit="${unit}" data-price="${price}">Add to Cart</button>
-                `;
-            }
-        });
-
-        if (cart.length === 0) {
-            cartItemsContainer.innerHTML = '<p class="empty-cart">Your cart is currently empty.</p>';
-            cartTotalDiv.style.display = 'none';
-            selectedAddress = null; 
-            return;
-        }
-
-        let cartHTML = '';
-        let subtotalPrice = 0;
-
-        cart.forEach(item => {
-            let itemTotal = item.price * item.quantity;
-            subtotalPrice += itemTotal;
-            cartHTML += `
-                <div class="cart-row">
-                    <div class="cart-item-info">
-                        <span>${item.name} (${item.unit})</span>
-                        <span style="color: #7b2c22;">₹${itemTotal}</span>
-                    </div>
-                    <div class="cart-item-actions">
-                        <div class="qty-selector">
-                            <button class="qty-btn decrease-qty" data-name="${item.name}">-</button>
-                            <span class="qty-text" style="color:white;">${item.quantity}</span>
-                            <button class="qty-btn increase-qty" data-name="${item.name}">+</button>
-                        </div>
-                        <button class="remove-item-btn" data-name="${item.name}">Remove</button>
-                    </div>
-                </div>
-            `;
-        });
-
-        cartItemsContainer.innerHTML = cartHTML;
-        cartSubtotalVal.textContent = subtotalPrice;
-
-        if (selectedAddress) {
-            cartSelectedAddressBox.classList.remove('hidden');
-            cartAddrName.textContent = `${selectedAddress.contactPerson} (${selectedAddress.tag})`;
-            cartAddrText.textContent = selectedAddress.fullAddr;
-
-            shippingRow.classList.remove('hidden');
-            totalLabelText.textContent = "Total";
-            totalAmountSpan.textContent = subtotalPrice + SHIPPING_CHARGE;
-
-            gotoDeliveryBtn.textContent = "Make Payment Now";
-            gotoDeliveryBtn.style.backgroundColor = "#25D366";
-        } else {
-            cartSelectedAddressBox.classList.add('hidden');
-            shippingRow.classList.add('hidden');
-            totalLabelText.textContent = "Estimated Total";
-            totalAmountSpan.textContent = subtotalPrice;
-
-            gotoDeliveryBtn.textContent = "Select Delivery Address";
-            gotoDeliveryBtn.style.backgroundColor = "#d97706";
-        }
-
-        cartTotalDiv.style.display = 'block';
-    }
-
-    cartBadge.style.display = 'none';
-});
