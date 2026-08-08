@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let selectedAddress = null; 
     let editingAddressId = null; 
     let pendingRedirectToAddress = false; 
-    let currentCoords = null; // Stores { lat, lng } when fetched
+    let currentCoords = null; 
     const SHIPPING_CHARGE = 150;
 
     // Leaflet Map variables
@@ -26,8 +26,28 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // Party Shots (Confetti Burst Triggered as Order Summary Opens)
+    function triggerPartyConfetti() {
+        if (typeof confetti === 'function') {
+            const count = 220;
+            const defaults = { origin: { y: 0.5 } };
+
+            function fire(particleRatio, opts) {
+                confetti(Object.assign({}, defaults, opts, {
+                    particleCount: Math.floor(count * particleRatio)
+                }));
+            }
+
+            fire(0.25, { spread: 35, startVelocity: 60 });
+            fire(0.2, { spread: 70 });
+            fire(0.35, { spread: 110, decay: 0.91, scalar: 0.9 });
+            fire(0.1, { spread: 130, startVelocity: 30, decay: 0.92, scalar: 1.2 });
+            fire(0.1, { spread: 130, startVelocity: 50 });
+        }
+    }
+
     // --- LEAFLET MAP & GEOLOCATION LOGIC ---
-    function initAddressMap(lat = 23.0225, lng = 72.5714) { // Default Ahmedabad coordinates
+    function initAddressMap(lat = 23.0225, lng = 72.5714) {
         setTimeout(() => {
             if (!addressMap) {
                 addressMap = L.map('address-map').setView([lat, lng], 13);
@@ -61,7 +81,6 @@ document.addEventListener('DOMContentLoaded', () => {
         reverseGeocodePincodeOnly(lat, lng);
     }
 
-    // Extracted Pincode only from Nominatim without overwriting full address text
     function reverseGeocodePincodeOnly(lat, lng) {
         fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`)
             .then(res => res.json())
@@ -82,7 +101,6 @@ document.addEventListener('DOMContentLoaded', () => {
             .catch(err => console.log('Pincode fetch error:', err));
     }
 
-    // Fetch Current Location Button Click
     document.getElementById('fetch-location-btn').addEventListener('click', () => {
         const btn = document.getElementById('fetch-location-btn');
         btn.textContent = "⌛ Fetching Location...";
@@ -98,7 +116,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 },
                 (err) => {
                     btn.textContent = "📍 Fetch Current Location";
-                    alert('Could not fetch location. Please check browser location permissions or click on the map directly.');
+                    alert('Could not fetch location. Please check browser location permissions.');
                 },
                 { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
             );
@@ -118,7 +136,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const authSubmitBtn = document.getElementById('auth-submit-btn');
     const loginMessage = document.getElementById('login-message');
 
-    // Register Modal elements
     const openRegisterBtn = document.getElementById('open-register-btn');
     const registerModal = document.getElementById('register-modal');
     const closeRegisterBtn = document.getElementById('close-register-btn');
@@ -131,6 +148,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const registerSubmitBtn = document.getElementById('register-submit-btn');
     const registerMessage = document.getElementById('register-message');
     const backToLoginBtn = document.getElementById('back-to-login-btn');
+
+    // Payment Modal elements
+    const paymentModal = document.getElementById('payment-modal');
+    const paymentPaidBtn = document.getElementById('payment-paid-btn');
+    const paymentCancelBtn = document.getElementById('payment-cancel-btn');
+
+    // Order Confirm Modal elements
+    const orderConfirmModal = document.getElementById('order-confirm-modal');
+    const closeConfirmBtn = document.getElementById('close-confirm-btn');
+    const confirmAddrPerson = document.getElementById('confirm-addr-person');
+    const confirmAddrText = document.getElementById('confirm-addr-text');
+    const confirmAddrContact = document.getElementById('confirm-addr-contact');
+    const confirmOrderItems = document.getElementById('confirm-order-items');
+    const confirmTotalVal = document.getElementById('confirm-total-val');
 
     // Address Modal elements
     const triggerAddAddressBtn = document.getElementById('trigger-add-address-modal');
@@ -148,7 +179,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const addressFormMsg = document.getElementById('address-form-msg');
     const addressCardsList = document.getElementById('address-cards-list');
 
-    // Toggle Custom Tag Input Field
     addTagType.addEventListener('change', () => {
         if (addTagType.value === 'Other') {
             addCustomTag.classList.remove('hidden');
@@ -158,14 +188,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Profile elements
     const profileModal = document.getElementById('profile-modal');
     const closeProfileBtn = document.getElementById('close-profile-btn');
     const logoutBtn = document.getElementById('logout-btn');
     const profileNameDisplay = document.getElementById('profile-name-display');
     const profileMobileDisplay = document.getElementById('profile-mobile-display');
 
-    // Cart tab Address elements
     const cartSelectedAddressBox = document.getElementById('cart-selected-address-box');
     const cartAddrName = document.getElementById('cart-addr-name');
     const cartAddrText = document.getElementById('cart-addr-text');
@@ -214,7 +242,6 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => mobileInput.focus(), 100);
     });
 
-    // Open Modal for "Add New Address" (Form strictly requires user input)
     triggerAddAddressBtn.addEventListener('click', () => {
         editingAddressId = null;
         currentCoords = null;
@@ -237,7 +264,6 @@ document.addEventListener('DOMContentLoaded', () => {
         newAddressModal.classList.remove('active');
     });
 
-    // Save or Update Address (Strict Validation & Custom Tag)
     saveAddressBtn.addEventListener('click', () => {
         const contactPerson = addContactPerson.value.trim();
         const email = addEmail.value.trim();
@@ -256,7 +282,6 @@ document.addEventListener('DOMContentLoaded', () => {
             tag = customTagVal;
         }
 
-        // Strict Mandatory Validation
         if (!contactPerson || !mobile || !fullAddr || !pincode) {
             addressFormMsg.style.color = '#c91818';
             addressFormMsg.textContent = 'Contact Person, Mobile Number, Full Address, and Pin Code are required.';
@@ -433,6 +458,60 @@ document.addEventListener('DOMContentLoaded', () => {
         window.location.href = '#home';
     });
 
+    // --- PAYMENT & CONFIRMATION HANDLERS ---
+    paymentCancelBtn.addEventListener('click', () => {
+        paymentModal.classList.remove('active');
+    });
+
+    paymentPaidBtn.addEventListener('click', () => {
+        paymentModal.classList.remove('active');
+
+        // Populate Order Confirmation / Summary Modal
+        if (selectedAddress) {
+            confirmAddrPerson.textContent = `${selectedAddress.contactPerson} (${selectedAddress.tag})`;
+            confirmAddrText.textContent = selectedAddress.fullAddr;
+            confirmAddrContact.textContent = `Mobile: ${selectedAddress.mobile}${selectedAddress.email ? ' | Email: ' + selectedAddress.email : ''}`;
+        }
+
+        let itemsHtml = '';
+        let subtotal = 0;
+        cart.forEach(item => {
+            let itemTotal = item.price * item.quantity;
+            subtotal += itemTotal;
+            itemsHtml += `
+                <div style="display:flex; justify-content:space-between; margin-bottom: 6px; font-size: 0.9rem;">
+                    <span>${item.name} (${item.unit}) x ${item.quantity}</span>
+                    <span style="font-weight:bold;">₹${itemTotal}</span>
+                </div>
+            `;
+        });
+        itemsHtml += `
+            <div style="display:flex; justify-content:space-between; font-size: 0.85rem; color: #666; margin-top: 4px;">
+                <span>Shipping Charges:</span>
+                <span>₹${SHIPPING_CHARGE}</span>
+            </div>
+        `;
+
+        confirmOrderItems.innerHTML = itemsHtml;
+        const finalVal = subtotal + SHIPPING_CHARGE;
+        confirmTotalVal.textContent = finalVal;
+
+        // Open Order Summary Modal
+        orderConfirmModal.classList.add('active');
+
+        // Trigger Festive Party Confetti Burst immediately as Order Summary opens
+        setTimeout(() => {
+            triggerPartyConfetti();
+        }, 100);
+    });
+
+    // CLOSE ORDER SUMMARY & EMPTY CART LOGIC
+    closeConfirmBtn.addEventListener('click', () => {
+        orderConfirmModal.classList.remove('active');
+        cart = []; // Empty cart
+        selectedAddress = null; // Clear selected address
+        updateAllUI(); // Refresh UI to reflect empty cart
+    });
 
     // --- CART & ADDRESS SLIDER LOGIC ---
     const cartBadge = document.getElementById('cart-badge');
@@ -469,26 +548,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     gotoDeliveryBtn.addEventListener('click', () => {
         if (selectedAddress && gotoDeliveryBtn.textContent === "Make Payment Now") {
-            let orderSummary = `Hello Soni Mehndi Artist! I would like to place an order:%0A%0A` +
-                `*Customer:* ${selectedAddress.contactPerson}%0A` +
-                `*Mobile:* ${selectedAddress.mobile}%0A` +
-                (selectedAddress.email ? `*Email:* ${selectedAddress.email}%0A` : '') +
-                `*Delivery Address (${selectedAddress.tag}):* ${selectedAddress.fullAddr}%0A` +
-                (selectedAddress.coords ? `*Location Coordinates:* Lat ${selectedAddress.coords.lat}, Lng ${selectedAddress.coords.lng}%0A` : '') +
-                `%0A*Order Items:*%0A`;
-
-            let subtotal = 0;
-            cart.forEach(item => {
-                let itemTotal = item.price * item.quantity;
-                subtotal += itemTotal;
-                orderSummary += `- ${item.name} (${item.unit}) x${item.quantity} = ₹${itemTotal}%0A`;
-            });
-
-            orderSummary += `%0A*Subtotal:* ₹${subtotal}` +
-                `%0A*Shipping Charges:* ₹${SHIPPING_CHARGE}` +
-                `%0A*Total Amount Payable:* ₹${subtotal + SHIPPING_CHARGE}`;
-
-            window.open(`https://wa.me/919413425400?text=${orderSummary}`, '_blank');
+            closeAllSliders();
+            paymentModal.classList.add('active');
             return;
         }
 
@@ -512,7 +573,7 @@ document.addEventListener('DOMContentLoaded', () => {
         updateWhatsappVisibility();
     });
 
-    // Event Delegation for Card Actions & Dropdowns
+    // Event Delegation
     document.body.addEventListener('click', (e) => {
         if (e.target.classList.contains('ui-card-more')) {
             e.stopPropagation();
@@ -531,7 +592,6 @@ document.addEventListener('DOMContentLoaded', () => {
             document.querySelectorAll('.card-menu-dropdown').forEach(d => d.classList.remove('active'));
         }
 
-        // Edit Address Handler
         if (e.target.classList.contains('edit-addr-btn')) {
             const id = parseInt(e.target.getAttribute('data-id'));
             const addr = addressesList.find(a => a.id === id);
@@ -569,7 +629,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        // Delete Address Handler
         if (e.target.classList.contains('delete-addr-btn')) {
             const id = parseInt(e.target.getAttribute('data-id'));
             addressesList = addressesList.filter(a => a.id !== id);
@@ -580,7 +639,6 @@ document.addEventListener('DOMContentLoaded', () => {
             updateAllUI();
         }
 
-        // Deliver Here Handler
         if (e.target.classList.contains('deliver-here-btn')) {
             const addrId = parseInt(e.target.getAttribute('data-id'));
             selectedAddress = addressesList.find(a => a.id === addrId);
