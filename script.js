@@ -1,7 +1,10 @@
 document.addEventListener('DOMContentLoaded', () => {
-    let cart = [];
-    let addressesList = []; 
-    let selectedAddress = null; 
+    // RESTORE CART, ADDRESSES, SELECTED ADDRESS, AND ACTIVE VIEW FROM LOCALSTORAGE ON PAGE LOAD
+    let cart = JSON.parse(localStorage.getItem('cart')) || [];
+    let addressesList = JSON.parse(localStorage.getItem('addressesList')) || [];
+    let selectedAddress = JSON.parse(localStorage.getItem('selectedAddress')) || null;
+    let activeView = localStorage.getItem('activeView') || 'main'; // Tracks active slider/modal state
+    
     let editingAddressId = null; 
     let pendingRedirectToAddress = false; 
     let currentCoords = null; 
@@ -18,9 +21,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const loginModal = document.getElementById('login-modal');
     const closeLoginBtn = document.getElementById('close-login-btn');
 
-    // Automatically set Navigation link if user is already logged in
     if (currentUser) {
         loginLink.textContent = currentUser.name;
+    }
+
+    // STATE PERSISTENCE HELPER
+    function setActiveView(view) {
+        activeView = view;
+        localStorage.setItem('activeView', view);
+        updateWhatsappVisibility();
     }
 
     function updateWhatsappVisibility() {
@@ -158,6 +167,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Payment Modal elements
     const paymentModal = document.getElementById('payment-modal');
+    const paymentTxnId = document.getElementById('payment-txn-id');
+    const paymentErrorMsg = document.getElementById('payment-error-msg');
     const paymentPaidBtn = document.getElementById('payment-paid-btn');
     const paymentCancelBtn = document.getElementById('payment-cancel-btn');
 
@@ -168,6 +179,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const confirmAddrText = document.getElementById('confirm-addr-text');
     const confirmAddrContact = document.getElementById('confirm-addr-contact');
     const confirmOrderItems = document.getElementById('confirm-order-items');
+    const confirmTxnDisplay = document.getElementById('confirm-txn-display');
     const confirmTotalVal = document.getElementById('confirm-total-val');
 
     // Address Modal elements
@@ -326,6 +338,11 @@ document.addEventListener('DOMContentLoaded', () => {
             addressesList.push(newAddressObj);
         }
 
+        localStorage.setItem('addressesList', JSON.stringify(addressesList));
+        if (selectedAddress) {
+            localStorage.setItem('selectedAddress', JSON.stringify(selectedAddress));
+        }
+
         renderAddressCards();
         updateAllUI();
 
@@ -384,42 +401,30 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // STRICT LOGIN VALIDATION: ONLY 123456 / 123456 ALLOWED
     authSubmitBtn.addEventListener('click', () => {
         const mobile = mobileInput.value.trim();
         const pass = passwordInput.value.trim();
 
-        if (!mobile || !pass) {
-            loginMessage.style.color = '#c91818';
-            loginMessage.textContent = 'Please fill in mobile number and password.';
-            return;
-        }
-
         if (mobile === '123456' && pass === '123456') {
             currentUser = { name: 'admin', mobile: '123456' };
-        } else if (mobile === '9413425400' && pass === 'admin') {
-            currentUser = { name: 'admin', mobile: '9413425400' };
-        } else if (mobile) {
-            currentUser = { name: 'User (' + mobile.slice(-4) + ')', mobile: mobile };
+            localStorage.setItem('currentUser', JSON.stringify(currentUser));
+
+            loginModal.classList.remove('active');
+            loginLink.textContent = currentUser.name;
+            mobileInput.value = '';
+            passwordInput.value = '';
+            loginMessage.textContent = '';
+
+            if (pendingRedirectToAddress) {
+                pendingRedirectToAddress = false;
+                addressSlider.classList.add('open');
+                cartOverlay.classList.add('active');
+                setActiveView('address');
+            }
         } else {
             loginMessage.style.color = '#c91818';
-            loginMessage.textContent = 'Invalid mobile number or password.';
-            return;
-        }
-
-        // SAVE USER TO LOCALSTORAGE
-        localStorage.setItem('currentUser', JSON.stringify(currentUser));
-
-        loginModal.classList.remove('active');
-        loginLink.textContent = currentUser.name;
-        mobileInput.value = '';
-        passwordInput.value = '';
-        loginMessage.textContent = '';
-
-        if (pendingRedirectToAddress) {
-            pendingRedirectToAddress = false;
-            addressSlider.classList.add('open');
-            cartOverlay.classList.add('active');
-            updateWhatsappVisibility();
+            loginMessage.textContent = 'wrong login password';
         }
     });
 
@@ -437,8 +442,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         currentUser = { name: name, mobile: mobile };
-
-        // SAVE REGISTERED USER TO LOCALSTORAGE
         localStorage.setItem('currentUser', JSON.stringify(currentUser));
 
         registerModal.classList.remove('active');
@@ -458,16 +461,18 @@ document.addEventListener('DOMContentLoaded', () => {
             pendingRedirectToAddress = false;
             addressSlider.classList.add('open');
             cartOverlay.classList.add('active');
-            updateWhatsappVisibility();
+            setActiveView('address');
         }
     });
 
     logoutBtn.addEventListener('click', () => {
         currentUser = null;
         selectedAddress = null;
-        localStorage.removeItem('currentUser'); // CLEAR USER FROM LOCALSTORAGE
+        localStorage.removeItem('currentUser');
+        localStorage.removeItem('selectedAddress');
         loginLink.textContent = 'Login';
         profileModal.classList.remove('active');
+        setActiveView('main');
         updateAllUI();
         window.location.href = '#home';
     });
@@ -475,9 +480,20 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- PAYMENT & CONFIRMATION HANDLERS ---
     paymentCancelBtn.addEventListener('click', () => {
         paymentModal.classList.remove('active');
+        paymentErrorMsg.textContent = '';
+        paymentTxnId.value = '';
+        setActiveView('main');
     });
 
     paymentPaidBtn.addEventListener('click', () => {
+        const txnId = paymentTxnId.value.trim();
+
+        if (!txnId) {
+            paymentErrorMsg.textContent = 'Please enter Transaction ID / UTR Number to verify payment.';
+            return;
+        }
+
+        paymentErrorMsg.textContent = '';
         paymentModal.classList.remove('active');
 
         if (selectedAddress) {
@@ -506,10 +522,14 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
 
         confirmOrderItems.innerHTML = itemsHtml;
+        confirmTxnDisplay.textContent = `Transaction ID / UTR: ${txnId}`;
         const finalVal = subtotal + SHIPPING_CHARGE;
         confirmTotalVal.textContent = finalVal;
 
+        paymentTxnId.value = '';
+
         orderConfirmModal.classList.add('active');
+        setActiveView('summary');
 
         setTimeout(() => {
             triggerPartyConfetti();
@@ -521,6 +541,8 @@ document.addEventListener('DOMContentLoaded', () => {
         orderConfirmModal.classList.remove('active');
         cart = []; 
         selectedAddress = null; 
+        localStorage.removeItem('selectedAddress');
+        setActiveView('main');
         updateAllUI(); 
     });
 
@@ -543,14 +565,14 @@ document.addEventListener('DOMContentLoaded', () => {
         addressSlider.classList.remove('open');
         cartSlider.classList.add('open');
         cartOverlay.classList.add('active');
-        updateWhatsappVisibility();
+        setActiveView('cart');
     });
 
     function closeAllSliders() {
         cartSlider.classList.remove('open');
         addressSlider.classList.remove('open');
         cartOverlay.classList.remove('active');
-        updateWhatsappVisibility();
+        setActiveView('main');
     }
 
     closeCartBtn.addEventListener('click', closeAllSliders);
@@ -561,6 +583,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (selectedAddress && gotoDeliveryBtn.textContent === "Make Payment Now") {
             closeAllSliders();
             paymentModal.classList.add('active');
+            setActiveView('payment');
             return;
         }
 
@@ -574,14 +597,14 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             cartSlider.classList.remove('open');
             addressSlider.classList.add('open');
-            updateWhatsappVisibility();
+            setActiveView('address');
         }
     });
 
     changeAddressBtn.addEventListener('click', () => {
         cartSlider.classList.remove('open');
         addressSlider.classList.add('open');
-        updateWhatsappVisibility();
+        setActiveView('address');
     });
 
     // Event Delegation
@@ -643,9 +666,13 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.target.classList.contains('delete-addr-btn')) {
             const id = parseInt(e.target.getAttribute('data-id'));
             addressesList = addressesList.filter(a => a.id !== id);
+            
             if (selectedAddress && selectedAddress.id === id) {
                 selectedAddress = null;
+                localStorage.removeItem('selectedAddress');
             }
+
+            localStorage.setItem('addressesList', JSON.stringify(addressesList));
             renderAddressCards();
             updateAllUI();
         }
@@ -655,11 +682,12 @@ document.addEventListener('DOMContentLoaded', () => {
             selectedAddress = addressesList.find(a => a.id === addrId);
 
             if (selectedAddress) {
+                localStorage.setItem('selectedAddress', JSON.stringify(selectedAddress));
                 renderAddressCards();
                 updateAllUI();
                 addressSlider.classList.remove('open');
                 cartSlider.classList.add('open');
-                updateWhatsappVisibility();
+                setActiveView('cart');
             }
         }
         else if (e.target.classList.contains('add-to-cart-btn')) {
@@ -691,6 +719,11 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     function updateAllUI() {
+        localStorage.setItem('cart', JSON.stringify(cart));
+        if (selectedAddress) {
+            localStorage.setItem('selectedAddress', JSON.stringify(selectedAddress));
+        }
+
         const totalCount = cart.reduce((sum, item) => sum + item.quantity, 0);
         
         cartHeaderCount.textContent = `${totalCount} ${totalCount === 1 ? 'Item' : 'Items'}`;
@@ -728,6 +761,7 @@ document.addEventListener('DOMContentLoaded', () => {
             cartItemsContainer.innerHTML = '<p class="empty-cart">Your cart is currently empty.</p>';
             cartTotalDiv.style.display = 'none';
             selectedAddress = null; 
+            localStorage.removeItem('selectedAddress');
             return;
         }
 
@@ -782,5 +816,24 @@ document.addEventListener('DOMContentLoaded', () => {
         cartTotalDiv.style.display = 'block';
     }
 
-    cartBadge.style.display = 'none';
+    // RESTORE OPEN SCREEN VIEW ON PAGE REFRESH
+    function restoreViewState() {
+        renderAddressCards();
+        updateAllUI();
+
+        if (activeView === 'cart' && cart.length > 0) {
+            cartSlider.classList.add('open');
+            cartOverlay.classList.add('active');
+        } else if (activeView === 'address') {
+            addressSlider.classList.add('open');
+            cartOverlay.classList.add('active');
+        } else if (activeView === 'payment') {
+            paymentModal.classList.add('active');
+        } else if (activeView === 'summary') {
+            orderConfirmModal.classList.add('active');
+        }
+        updateWhatsappVisibility();
+    }
+
+    restoreViewState();
 });
