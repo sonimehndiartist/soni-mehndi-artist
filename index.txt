@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Soni Mehndi Artist | Organic Henna & Cones Shop</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap" rel="stylesheet">
+
+    <!-- LEAFLET MAP CSS & JS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <!-- CANVAS CONFETTI FOR PARTY SHOTS -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- LOGIN OVERLAY -->
+    <div id="login-modal" class="modal-overlay">
+        <div class="modal-box">
+            <button id="close-login-btn" class="close-modal-btn">&times;</button>
+
+            <div id="login-form-container">
+                <h2>User Login</h2>
+                <p>Please enter your mobile number and password.</p>
+
+                <input type="tel" id="mobile-input" placeholder="Mobile Number" />
+                <input type="password" id="password-input" placeholder="Password" />
+
+                <button id="auth-submit-btn" class="btn" style="width: 100%; margin-bottom: 10px;">Login</button>
+                <p id="login-message" class="error-msg"></p>
+
+                <p style="margin-top: 15px; color: #6b5b53; font-size: 0.95rem;">Don't have an account?</p>
+                <button id="open-register-btn" class="btn alt-btn" style="width: 100%; margin-top: 5px;">Register</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- REGISTRATION OVERLAY -->
+    <div id="register-modal" class="modal-overlay">
+        <div class="modal-box">
+            <button id="close-register-btn" class="close-modal-btn">&times;</button>
+
+            <h2>Register Account</h2>
+            <p>Please fill in your details below.</p>
+
+            <input type="text" id="reg-name-input" placeholder="Full Name / User Name" />
+            <input type="tel" id="reg-mobile-input" placeholder="Mobile Number" />
+            <input type="password" id="reg-password-input" placeholder="Password" />
+            <textarea id="reg-address-input" placeholder="Full Address" style="width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 5px; font-size: 1rem; resize: vertical; height: 70px;"></textarea>
+            <input type="text" id="reg-pincode-input" placeholder="Pin Code" />
+            <textarea id="reg-remarks-input" placeholder="Remarks (Optional)" style="width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 5px; font-size: 1rem; resize: vertical; height: 60px;"></textarea>
+
+            <button id="register-submit-btn" class="btn" style="width: 100%; margin-bottom: 10px;">Submit Registration</button>
+            <p id="register-message" class="error-msg"></p>
+
+            <button id="back-to-login-btn" class="btn alt-btn" style="width: 100%; margin-top: 10px;">Already have an account?</button>
+        </div>
+    </div>
+
+    <!-- ADD / EDIT DELIVERY ADDRESS MODAL WITH MAP -->
+    <div id="new-address-modal" class="modal-overlay">
+        <div class="modal-box" style="max-width: 450px; max-height: 90vh; overflow-y: auto;">
+            <button id="close-new-address-btn" class="close-modal-btn">&times;</button>
+            <h2 id="address-modal-title">Add Delivery Address</h2>
+            <p>Fetch location or enter address details below.</p>
+
+            <div class="map-section" style="margin-bottom: 15px;">
+                <button type="button" id="fetch-location-btn" class="btn alt-btn" style="width: 100%; margin-bottom: 8px; font-size: 0.9rem; padding: 10px; background-color: #e8f1ff; border-color: #1a73e8; color: #1a73e8;">
+                    📍 Fetch Current Location
+                </button>
+                <div id="location-coords-display" style="font-size: 0.82rem; color: #2e7d32; font-weight: bold; margin-bottom: 8px; min-height: 18px;"></div>
+                <div id="address-map" style="height: 180px; width: 100%; border-radius: 8px; border: 1px solid #ccc;"></div>
+            </div>
+
+            <input type="text" id="add-contact-person" placeholder="Contact Person Full Name *" required />
+            <input type="tel" id="add-mobile" placeholder="Mobile Number *" required />
+            <input type="email" id="add-email" placeholder="Email Address (Optional)" />
+            <textarea id="add-full-address" placeholder="Full Address (House/Flat No, Area, City, State) *" style="width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 5px; font-size: 1rem; resize: vertical; height: 60px;" required></textarea>
+            <input type="text" id="add-pincode" placeholder="Pin Code *" required />
+
+            <select id="add-tag-type" style="width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 5px; font-size: 1rem;">
+                <option value="Home">Home</option>
+                <option value="Work">Work</option>
+                <option value="Other">Other</option>
+            </select>
+
+            <input type="text" id="add-custom-tag" class="hidden" placeholder="Specify Other Tag (e.g. Friend's Place) *" />
+
+            <button id="save-address-btn" class="btn" style="width: 100%;">Save Address</button>
+            <p id="address-form-msg" class="error-msg"></p>
+        </div>
+    </div>
+
+    <!-- ORDER CONFIRMATION MODAL -->
+    <div id="order-confirm-modal" class="modal-overlay">
+        <div class="modal-box" style="max-width: 480px; text-align: left; max-height: 90vh; overflow-y: auto;">
+            <button id="close-confirm-btn" class="close-modal-btn">&times;</button>
+            <div style="text-align: center; margin-bottom: 15px; padding-top: 10px;">
+                <h2 style="color: #7b2c22; margin-bottom: 5px; font-size: 1.6rem;">Order Summary</h2>
+                <p style="font-size: 1.1rem; font-weight: bold; color: #7b2c22;">Order ID: #40000001</p>
+            </div>
+
+            <div style="background: #faf7f2; border: 1px solid #ddd; border-radius: 8px; padding: 15px; margin-bottom: 15px;">
+                <h3 style="font-size: 1rem; color: #7b2c22; margin-bottom: 8px; border-bottom: 1px solid #ddd; padding-bottom: 4px;">Delivery Address</h3>
+                <p id="confirm-addr-person" style="font-weight: bold; font-size: 0.95rem;"></p>
+                <p id="confirm-addr-text" style="font-size: 0.85rem; color: #444; line-height: 1.3;"></p>
+                <p id="confirm-addr-contact" style="font-size: 0.85rem; color: #666; margin-top: 4px;"></p>
+            </div>
+
+            <div style="background: #faf7f2; border: 1px solid #ddd; border-radius: 8px; padding: 15px;">
+                <h3 style="font-size: 1rem; color: #7b2c22; margin-bottom: 8px; border-bottom: 1px solid #ddd; padding-bottom: 4px;">Order Details</h3>
+                <div id="confirm-order-items"></div>
+                <p id="confirm-txn-display" style="font-size: 0.85rem; color: #2e7d32; font-weight: bold; margin-top: 8px;"></p>
+                <hr style="margin: 10px 0; border: none; border-top: 1px dashed #ccc;">
+                <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 1.05rem; color: #7b2c22;">
+                    <span>Total Value Paid:</span>
+                    <span>₹<span id="confirm-total-val">0</span></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- USER PROFILE / LOGOUT OVERLAY -->
+    <div id="profile-modal" class="modal-overlay">
+        <div class="modal-box">
+            <button id="close-profile-btn" class="close-modal-btn">&times;</button>
+            <h2>User Profile</h2>
+            <p style="font-size: 1.2rem; margin-top: 10px;"><strong>User Name:</strong> <span id="profile-name-display"></span></p>
+            <p style="font-size: 1rem; color: #6b5b53;"><strong>Mobile:</strong> <span id="profile-mobile-display"></span></p>
+            <p style="color: #6b5b53; font-size: 0.85rem; margin-bottom: 25px; margin-top: 5px;">(Password is hidden for your security)</p>
+
+            <button id="logout-btn" class="btn" style="width: 100%; background-color: #c91818;">Logout</button>
+        </div>
+    </div>
+
+    <!-- BRAND BANNER -->
+    <div class="brand-banner">
+        <h1 class="logo">Soni Mehndi Artist</h1>
+    </div>
+
+    <!-- STICKY NAVIGATION BAR -->
+    <header class="sticky-nav">
+        <nav>
+            <ul>
+                <li><a href="#home">Home</a></li>
+                <li><a href="#shop">Shop</a></li>
+                <li><a href="#login" id="login-link">Login</a></li>
+                <li>
+                    <a href="#cart" id="cart-link" class="cart-nav-item">
+                        Cart 
+                        <span id="cart-badge" class="cart-badge">0</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </header>
+
+    <main id="main-content">
+        <section id="home" class="hero">
+            <div class="hero-content">
+                <h1>Pure, Organic Henna & Professional Supplies</h1>
+                <p>Handcrafted bridal henna cones, 100% chemical-free powder, and pure essential oils for a deep, long-lasting stain.</p>
+                <a href="#shop" class="btn">Shop Best Sellers</a>
+            </div>
+        </section>
+
+        <section id="shop" class="shop-section">
+            <h2>Our E-Commerce Store</h2>
+            <p class="section-subtitle">Elevate your art with our premium, skin-safe ingredients.</p>
+
+            <div class="product-grid">
+                <div class="product-card">
+                    <div class="img-container">
+                        <img src="https://encrypted-tbn0.gstatic.com/licensed-image?q=tbn:ANd9GcRBIJW0rpFVnLowxewfvzgWoHeiz56545RgUI2_CPA_WVzy38GkWvJru0yKDqvtR33tUmhD2DAxATsvz8o" alt="Henna artist applying mehndi with a cone" style="width: 100%; height: 100%; object-fit: cover;">
+                    </div>
+                    <h3>Bridal Henna Cones (Pack of 5)</h3>
+                    <p class="price">₹350</p>
+                    <p class="desc">Freshly mixed with Nilgiri and Eucalyptus essential oils. Rich dark stain guaranteed.</p>
+                    <div class="product-actions" data-name="Bridal Henna Cones" data-unit="Pack of 5" data-price="350">
+                        <button class="add-to-cart-btn" data-name="Bridal Henna Cones" data-unit="Pack of 5" data-price="350">Add to Cart</button>
+                    </div>
+                </div>
+
+                <div class="product-card">
+                    <div class="img-container">
+                        <img src="https://encrypted-tbn3.gstatic.com/licensed-image?q=tbn:ANd9GcTEXa7rcKx6px7VcZQ34tJuCfCTFXAhsIllvhLf9k9jD5ziFxWTh2H9uh2szv4jw-Ld-QBHP1UNDMS4wK0" alt="Organic henna powder in a white bowl with green leaves" style="width: 100%; height: 100%; object-fit: cover;">
+                    </div>
+                    <h3>Organic Sojat Henna Powder (250g)</h3>
+                    <p class="price">₹450</p>
+                    <p class="desc">Triple-sifted, pure natural crop directly from Sojat. Perfect for professional paste mixing.</p>
+                    <div class="product-actions" data-name="Organic Sojat Henna Powder" data-unit="250g" data-price="450">
+                        <button class="add-to-cart-btn" data-name="Organic Sojat Henna Powder" data-unit="250g" data-price="450">Add to Cart</button>
+                    </div>
+                </div>
+
+                <div class="product-card">
+                    <div class="img-container">
+                        <img src="https://encrypted-tbn2.gstatic.com/licensed-image?q=tbn:ANd9GcQKl5Zi8OogedeMOEy9Wqj6aQ686SjkyznR9bC2WyRpG0s0mmz-qru5_hvvr6mnnECrPsvzRB5udYQALtI" alt="Hand holding a small amber bottle of essential oil" style="width: 100%; height: 100%; object-fit: cover;">
+                    </div>
+                    <h3>Pure Henna Aftercare Oil (30ml)</h3>
+                    <p class="price">₹299</p>
+                    <p class="desc">Special blend of eucalyptus and clove oil to seal the design and darken the stain.</p>
+                    <div class="product-actions" data-name="Pure Henna Aftercare Oil" data-unit="30ml" data-price="299">
+                        <button class="add-to-cart-btn" data-name="Pure Henna Aftercare Oil" data-unit="30ml" data-price="299">Add to Cart</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- CART OVERLAY & SLIDER -->
+    <div id="cart-overlay" class="cart-overlay"></div>
+    <div id="cart-slider" class="cart-slider">
+        <div class="cart-header">
+            <h2>Your Cart (<span id="cart-header-count">0 Items</span>)</h2>
+            <button id="close-cart" class="close-cart-btn">&times;</button>
+        </div>
+        <div id="cart-items"><p class="empty-cart">Your cart is currently empty.</p></div>
+
+        <div id="cart-total" style="display:none;">
+            <div id="cart-selected-address-box" class="cart-address-banner hidden">
+                <div class="cart-address-title">
+                    <span>Deliver To: <strong id="cart-addr-name"></strong></span>
+                    <button id="change-address-btn" class="change-addr-link">Change</button>
+                </div>
+                <p id="cart-addr-text" class="cart-addr-text"></p>
+            </div>
+
+            <div class="pricing-rows-container">
+                <div class="price-row">
+                    <span>Subtotal:</span>
+                    <span>₹<span id="cart-subtotal-val">0</span></span>
+                </div>
+                <div id="shipping-row" class="price-row hidden">
+                    <span>Shipping Charges:</span>
+                    <span style="color: #2e7d32; font-weight: bold;">₹150</span>
+                </div>
+                <hr style="margin: 8px 0; border: none; border-top: 1px dashed #ccc;">
+                <h3 id="total-label-heading"><span id="total-label-text">Estimated Total</span>: ₹<span id="total-amount">0</span></h3>
+            </div>
+
+            <button id="goto-delivery-btn" class="btn checkout-btn">Select Delivery Address</button>
+        </div>
+    </div>
+
+    <!-- DELIVERY ADDRESS TAB -->
+    <div id="address-slider" class="cart-slider">
+        <div class="cart-header">
+            <h2>Delivery Details</h2>
+            <button id="close-address" class="close-cart-btn">&times;</button>
+        </div>
+
+        <div class="delivery-details-container">
+            <div class="address-top-bar">
+                <span class="select-address-title">Select Delivery Address</span>
+                <button id="trigger-add-address-modal" class="add-address-pill-btn">+ Add New Address</button>
+            </div>
+
+            <div id="address-cards-list" class="address-cards-list">
+                <p id="empty-address-msg" class="empty-address-msg">No delivery address available.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- FLOATING WHATSAPP BUTTON -->
+    <a href="https://wa.me/919099449353" id="floating-whatsapp" class="floating-whatsapp" target="_blank" title="Chat with us on WhatsApp">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 308 308" width="40" height="40" fill="#FFFFFF">
+            <path d="M227.904,176.981c-0.6-0.288-23.054-11.345-27.044-12.781c-3.99-1.436-6.898-2.155-9.805,2.155
+            c-2.908,4.309-11.23,14.155-13.76,17.032c-2.53,2.878-5.06,3.238-9.369,1.078c-4.309-2.156-18.196-6.708-34.664-21.399
+            c-12.825-11.441-21.488-25.568-24.018-29.877c-2.53-4.31-0.271-6.638,1.889-8.788c1.944-1.932,4.309-5.038,6.464-7.558
+            c2.155-2.52,2.878-4.31,4.316-7.188c1.437-2.878,0.718-5.389-0.36-7.548c-1.078-2.159-9.805-23.627-13.435-32.338
+            c-3.536-8.483-7.135-7.337-9.805-7.481c-2.53-0.144-5.426-0.174-8.324-0.174c-2.898,0-7.611,1.078-11.59,5.389
+            c-3.979,4.31-15.19,14.852-15.19,36.216c0,21.364,15.549,42.023,17.704,44.891c2.155,2.868,30.606,46.732,74.137,65.534
+            c10.352,4.472,18.432,7.147,24.733,9.152c10.393,3.303,19.852,2.836,27.324,1.718c8.328-1.244,25.627-10.472,29.232-20.598
+            c3.605-10.126,3.605-18.799,2.527-20.598C234.802,180.219,232.213,179.139,227.904,176.981z"/>
+            <path d="M154,0C69.076,0,0,69.076,0,154c0,32.339,10.026,62.321,27.188,86.881L11.082,297.87l58.847-15.54
+            C93.435,297.808,122.428,308,154,308c84.924,0,154-69.076,154-154S238.924,0,154,0z M154,281.258
+            c-26.758,0-51.521-8.238-71.956-22.316l-4.996-3.447-38.307,10.111,10.301-37.585l-3.666-5.184
+            c-15.421-21.782-24.501-48.271-24.501-76.84C20.875,80.597,80.597,20.875,154,20.875c73.403,0,133.125,59.722,133.125,133.125
+            C287.125,227.403,227.403,281.258,154,281.258z"/>
+        </svg>
+    </a>
+
+    <footer>
+        <p>&copy; 2026 Soni Mehndi Artist & Store. All Rights Reserved.</p>
+        <p style="margin-top: 10px;">Contact us: <a href="tel:+919099449353" style="color: #f4d06f; text-decoration: none;">+91 9099449353</a></p>
+        <p><a href="https://wa.me/919099449353" target="_blank" class="whatsapp-footer-link">Chat with us on WhatsApp</a></p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
