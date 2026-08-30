@@ -4,11 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Soni Mehndi Artist | Organic Henna & Cones Shop</title>
-
+    
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap" rel="stylesheet">
-
+    
     <!-- LEAFLET MAP CSS & JS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -24,17 +24,17 @@
     <div id="login-modal" class="modal-overlay">
         <div class="modal-box">
             <button id="close-login-btn" class="close-modal-btn">&times;</button>
-
+            
             <div id="login-form-container">
                 <h2>User Login</h2>
                 <p>Please enter your mobile number and password.</p>
-
+                
                 <input type="tel" id="mobile-input" placeholder="Mobile Number" />
                 <input type="password" id="password-input" placeholder="Password" />
-
+                
                 <button id="auth-submit-btn" class="btn" style="width: 100%; margin-bottom: 10px;">Login</button>
                 <p id="login-message" class="error-msg"></p>
-
+                
                 <p style="margin-top: 15px; color: #6b5b53; font-size: 0.95rem;">Don't have an account?</p>
                 <button id="open-register-btn" class="btn alt-btn" style="width: 100%; margin-top: 5px;">Register</button>
             </div>
@@ -45,17 +45,17 @@
     <div id="register-modal" class="modal-overlay">
         <div class="modal-box">
             <button id="close-register-btn" class="close-modal-btn">&times;</button>
-
+            
             <h2>Register Account</h2>
             <p>Please fill in your details below.</p>
-
+            
             <input type="text" id="reg-name-input" placeholder="Full Name / User Name" />
             <input type="tel" id="reg-mobile-input" placeholder="Mobile Number" />
             <input type="password" id="reg-password-input" placeholder="Password" />
             <textarea id="reg-address-input" placeholder="Full Address" style="width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 5px; font-size: 1rem; resize: vertical; height: 70px;"></textarea>
             <input type="text" id="reg-pincode-input" placeholder="Pin Code" />
             <textarea id="reg-remarks-input" placeholder="Remarks (Optional)" style="width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 5px; font-size: 1rem; resize: vertical; height: 60px;"></textarea>
-
+            
             <button id="register-submit-btn" class="btn" style="width: 100%; margin-bottom: 10px;">Submit Registration</button>
             <p id="register-message" class="error-msg"></p>
 
@@ -69,7 +69,7 @@
             <button id="close-new-address-btn" class="close-modal-btn">&times;</button>
             <h2 id="address-modal-title">Add Delivery Address</h2>
             <p>Fetch location or enter address details below.</p>
-
+            
             <div class="map-section" style="margin-bottom: 15px;">
                 <button type="button" id="fetch-location-btn" class="btn alt-btn" style="width: 100%; margin-bottom: 8px; font-size: 0.9rem; padding: 10px; background-color: #e8f1ff; border-color: #1a73e8; color: #1a73e8;">
                     📍 Fetch Current Location
@@ -83,7 +83,7 @@
             <input type="email" id="add-email" placeholder="Email Address (Optional)" />
             <textarea id="add-full-address" placeholder="Full Address (House/Flat No, Area, City, State) *" style="width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 5px; font-size: 1rem; resize: vertical; height: 60px;" required></textarea>
             <input type="text" id="add-pincode" placeholder="Pin Code *" required />
-
+            
             <select id="add-tag-type" style="width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 5px; font-size: 1rem;">
                 <option value="Home">Home</option>
                 <option value="Work">Work</option>
@@ -91,9 +91,39 @@
             </select>
 
             <input type="text" id="add-custom-tag" class="hidden" placeholder="Specify Other Tag (e.g. Friend's Place) *" />
-
+            
             <button id="save-address-btn" class="btn" style="width: 100%;">Save Address</button>
             <p id="address-form-msg" class="error-msg"></p>
+        </div>
+    </div>
+
+    <!-- PAYMENT MODAL -->
+    <div id="payment-modal" class="modal-overlay">
+        <div class="modal-box" style="max-width: 440px; text-align: center; border: 2px solid #7b2c22;">
+            <h2>Payment Details</h2>
+            
+            <div style="background-color: #fdf6ec; border: 1px solid #f4d06f; border-radius: 8px; padding: 15px; margin: 15px 0;">
+                <p style="font-size: 0.95rem; color: #2c221e; margin-bottom: 10px;">Please make payment on UPI ID:</p>
+                <p style="font-size: 1.1rem; font-weight: bold; color: #7b2c22; background: white; padding: 8px; border-radius: 6px; border: 1px dashed #7b2c22;">sonimehndiartist@sbi</p>
+            </div>
+
+            <!-- Transaction Reference Input -->
+            <div style="text-align: left; margin-bottom: 15px;">
+                <label style="font-size: 0.85rem; font-weight: bold; color: #2c221e; display: block; margin-bottom: 5px;">
+                    Enter Transaction ID / UTR Number (for verification):
+                </label>
+                <input type="text" id="payment-txn-id" placeholder="e.g. UPI/UTR Ref No." style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 0.95rem;" />
+            </div>
+            
+            <p style="font-size: 0.88rem; color: #555; line-height: 1.5; margin-bottom: 20px; text-align: left;">
+                Once you make the payment, click Paid so we can verify it with your Order ID. Verification usually takes up to 24 hours. Alternatively, you can send a screenshot of the payment on WhatsApp for faster verification.
+            </p>
+
+            <div style="display: flex; gap: 10px;">
+                <button id="payment-paid-btn" class="btn" style="flex: 1; background-color: #2e7d32;">Paid</button>
+                <button id="payment-cancel-btn" class="btn alt-btn" style="flex: 1; border-color: #c91818; color: #c91818;">Cancel</button>
+            </div>
+            <p id="payment-error-msg" class="error-msg" style="margin-top: 10px; font-size: 0.85rem;"></p>
         </div>
     </div>
 
@@ -134,7 +164,7 @@
             <p style="font-size: 1.2rem; margin-top: 10px;"><strong>User Name:</strong> <span id="profile-name-display"></span></p>
             <p style="font-size: 1rem; color: #6b5b53;"><strong>Mobile:</strong> <span id="profile-mobile-display"></span></p>
             <p style="color: #6b5b53; font-size: 0.85rem; margin-bottom: 25px; margin-top: 5px;">(Password is hidden for your security)</p>
-
+            
             <button id="logout-btn" class="btn" style="width: 100%; background-color: #c91818;">Logout</button>
         </div>
     </div>
@@ -173,7 +203,7 @@
         <section id="shop" class="shop-section">
             <h2>Our E-Commerce Store</h2>
             <p class="section-subtitle">Elevate your art with our premium, skin-safe ingredients.</p>
-
+            
             <div class="product-grid">
                 <div class="product-card">
                     <div class="img-container">
@@ -222,7 +252,7 @@
             <button id="close-cart" class="close-cart-btn">&times;</button>
         </div>
         <div id="cart-items"><p class="empty-cart">Your cart is currently empty.</p></div>
-
+        
         <div id="cart-total" style="display:none;">
             <div id="cart-selected-address-box" class="cart-address-banner hidden">
                 <div class="cart-address-title">
@@ -289,8 +319,8 @@
 
     <footer>
         <p>&copy; 2026 Soni Mehndi Artist & Store. All Rights Reserved.</p>
-        <p style="margin-top: 10px;">Contact us: <a href="tel:+919099449353" style="color: #f4d06f; text-decoration: none;">+91 9099449353</a></p>
-        <p><a href="https://wa.me/919099449353" target="_blank" class="whatsapp-footer-link">Chat with us on WhatsApp</a></p>
+        <p style="margin-top: 10px;">Contact us: <a href="tel:+919099449353" style="color: #f4d06f; text-decoration: none;">+91 94134 25400</a></p>
+        <p><a href="https://wa.me/919413425400" target="_blank" class="whatsapp-footer-link">Chat with us on WhatsApp</a></p>
     </footer>
 
     <script src="script.js"></script>
