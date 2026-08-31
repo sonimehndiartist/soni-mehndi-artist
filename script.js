@@ -1,31 +1,14 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // RESTORE CART, ADDRESSES, SELECTED ADDRESS, AND ACTIVE VIEW FROM LOCALSTORAGE ON PAGE LOAD
     let cart = JSON.parse(localStorage.getItem('cart')) || [];
     let addressesList = JSON.parse(localStorage.getItem('addressesList')) || [];
     let selectedAddress = JSON.parse(localStorage.getItem('selectedAddress')) || null;
-    let activeView = localStorage.getItem('activeView') || 'main'; // Tracks active slider/modal state
+    let activeView = localStorage.getItem('activeView') || 'main';
     
     let editingAddressId = null; 
-    let pendingRedirectToAddress = false; 
-    let currentCoords = null; 
     const SHIPPING_CHARGE = 150;
 
-    // RESTORE USER SESSION FROM LOCALSTORAGE ON PAGE LOAD
-    let currentUser = JSON.parse(localStorage.getItem('currentUser')) || null;
-
     const floatingWhatsapp = document.getElementById('floating-whatsapp');
-    const locationCoordsDisplay = document.getElementById('location-coords-display');
 
-    // UI & Navigation elements
-    const loginLink = document.getElementById('login-link');
-    const loginModal = document.getElementById('login-modal');
-    const closeLoginBtn = document.getElementById('close-login-btn');
-
-    if (currentUser) {
-        loginLink.textContent = currentUser.name;
-    }
-
-    // STATE PERSISTENCE HELPER
     function setActiveView(view) {
         activeView = view;
         localStorage.setItem('activeView', view);
@@ -43,11 +26,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Party Shots (Confetti Burst)
+    // Party Shots (Confetti Burst directly above Modal)
     function triggerPartyConfetti() {
         if (typeof confetti === 'function') {
             const count = 220;
-            const defaults = { origin: { y: 0.5 } };
+            const defaults = { 
+                origin: { y: 0.5 },
+                zIndex: 9999 // Renders in front of modal-overlay (z-index: 2000)
+            };
 
             function fire(particleRatio, opts) {
                 confetti(Object.assign({}, defaults, opts, {
@@ -63,126 +49,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- LEAFLET MAP & GEOLOCATION LOGIC ---
-    let addressMap = null;
-    let mapMarker = null;
-
-    function initAddressMap(lat = 23.0225, lng = 72.5714) {
-        setTimeout(() => {
-            if (!addressMap) {
-                addressMap = L.map('address-map').setView([lat, lng], 13);
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    maxZoom: 19,
-                    attribution: '© OpenStreetMap'
-                }).addTo(addressMap);
-
-                mapMarker = L.marker([lat, lng], { draggable: true }).addTo(addressMap);
-
-                mapMarker.on('dragend', function() {
-                    const pos = mapMarker.getLatLng();
-                    recordCoordinates(pos.lat, pos.lng);
-                });
-
-                addressMap.on('click', function(e) {
-                    mapMarker.setLatLng(e.latlng);
-                    recordCoordinates(e.lat, e.lng);
-                });
-            } else {
-                addressMap.setView([lat, lng], 13);
-                mapMarker.setLatLng([lat, lng]);
-            }
-            addressMap.invalidateSize();
-        }, 300);
-    }
-
-    function recordCoordinates(lat, lng) {
-        currentCoords = { lat: lat.toFixed(5), lng: lng.toFixed(5) };
-        locationCoordsDisplay.textContent = `Captured GPS: Lat ${currentCoords.lat}, Lng ${currentCoords.lng}`;
-        reverseGeocodePincodeOnly(lat, lng);
-    }
-
-    function reverseGeocodePincodeOnly(lat, lng) {
-        fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`)
-            .then(res => res.json())
-            .then(data => {
-                if (data) {
-                    const addressObj = data.address || {};
-                    let foundPin = addressObj.postcode;
-                    if (!foundPin && data.display_name) {
-                        const match = data.display_name.match(/\b\d{6}\b/);
-                        if (match) foundPin = match[0];
-                    }
-
-                    if (foundPin) {
-                        addPincode.value = foundPin;
-                    }
-                }
-            })
-            .catch(err => console.log('Pincode fetch error:', err));
-    }
-
-    document.getElementById('fetch-location-btn').addEventListener('click', () => {
-        const btn = document.getElementById('fetch-location-btn');
-        btn.textContent = "⌛ Fetching Location...";
-
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-                (pos) => {
-                    const lat = pos.coords.latitude;
-                    const lng = pos.coords.longitude;
-                    initAddressMap(lat, lng);
-                    recordCoordinates(lat, lng);
-                    btn.textContent = "📍 Fetch Current Location";
-                },
-                (err) => {
-                    btn.textContent = "📍 Fetch Current Location";
-                    alert('Could not fetch location. Please check browser location permissions.');
-                },
-                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-            );
-        } else {
-            btn.textContent = "📍 Fetch Current Location";
-            alert('Geolocation is not supported by your browser.');
-        }
-    });
-
-    // --- LOGIN & REGISTER LOGIC ---
-    const mobileInput = document.getElementById('mobile-input');
-    const passwordInput = document.getElementById('password-input');
-    const authSubmitBtn = document.getElementById('auth-submit-btn');
-    const loginMessage = document.getElementById('login-message');
-
-    const openRegisterBtn = document.getElementById('open-register-btn');
-    const registerModal = document.getElementById('register-modal');
-    const closeRegisterBtn = document.getElementById('close-register-btn');
-    const regNameInput = document.getElementById('reg-name-input');
-    const regMobileInput = document.getElementById('reg-mobile-input');
-    const regPasswordInput = document.getElementById('reg-password-input');
-    const regAddressInput = document.getElementById('reg-address-input');
-    const regPincodeInput = document.getElementById('reg-pincode-input');
-    const regRemarksInput = document.getElementById('reg-remarks-input');
-    const registerSubmitBtn = document.getElementById('register-submit-btn');
-    const registerMessage = document.getElementById('register-message');
-    const backToLoginBtn = document.getElementById('back-to-login-btn');
-
-    // Payment Modal elements
-    const paymentModal = document.getElementById('payment-modal');
-    const paymentTxnId = document.getElementById('payment-txn-id');
-    const paymentErrorMsg = document.getElementById('payment-error-msg');
-    const paymentPaidBtn = document.getElementById('payment-paid-btn');
-    const paymentCancelBtn = document.getElementById('payment-cancel-btn');
-
-    // Order Confirm Modal elements
+    // Modal & UI Elements
     const orderConfirmModal = document.getElementById('order-confirm-modal');
     const closeConfirmBtn = document.getElementById('close-confirm-btn');
+    const confirmOrderIdDisplay = document.getElementById('confirm-order-id-display');
     const confirmAddrPerson = document.getElementById('confirm-addr-person');
     const confirmAddrText = document.getElementById('confirm-addr-text');
     const confirmAddrContact = document.getElementById('confirm-addr-contact');
     const confirmOrderItems = document.getElementById('confirm-order-items');
-    const confirmTxnDisplay = document.getElementById('confirm-txn-display');
     const confirmTotalVal = document.getElementById('confirm-total-val');
 
-    // Address Modal elements
     const triggerAddAddressBtn = document.getElementById('trigger-add-address-modal');
     const newAddressModal = document.getElementById('new-address-modal');
     const closeNewAddressBtn = document.getElementById('close-new-address-btn');
@@ -207,12 +83,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    const profileModal = document.getElementById('profile-modal');
-    const closeProfileBtn = document.getElementById('close-profile-btn');
-    const logoutBtn = document.getElementById('logout-btn');
-    const profileNameDisplay = document.getElementById('profile-name-display');
-    const profileMobileDisplay = document.getElementById('profile-mobile-display');
-
     const cartSelectedAddressBox = document.getElementById('cart-selected-address-box');
     const cartAddrName = document.getElementById('cart-addr-name');
     const cartAddrText = document.getElementById('cart-addr-text');
@@ -221,50 +91,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const cartSubtotalVal = document.getElementById('cart-subtotal-val');
     const totalLabelText = document.getElementById('total-label-text');
 
-    loginLink.addEventListener('click', (e) => {
-        e.preventDefault();
-        if (currentUser) {
-            profileNameDisplay.textContent = currentUser.name;
-            profileMobileDisplay.textContent = currentUser.mobile;
-            profileModal.classList.add('active');
-        } else {
-            loginModal.classList.add('active');
-            setTimeout(() => mobileInput.focus(), 100);
-        }
-    });
-
-    closeLoginBtn.addEventListener('click', () => {
-        loginModal.classList.remove('active');
-        loginMessage.textContent = ''; 
-    });
-
-    closeProfileBtn.addEventListener('click', () => {
-        profileModal.classList.remove('active');
-    });
-
-    openRegisterBtn.addEventListener('click', () => {
-        loginModal.classList.remove('active');
-        loginMessage.textContent = '';
-        registerModal.classList.add('active');
-        setTimeout(() => regNameInput.focus(), 100);
-    });
-
-    closeRegisterBtn.addEventListener('click', () => {
-        registerModal.classList.remove('active');
-        registerMessage.textContent = '';
-    });
-
-    backToLoginBtn.addEventListener('click', () => {
-        registerModal.classList.remove('active');
-        registerMessage.textContent = '';
-        loginModal.classList.add('active');
-        setTimeout(() => mobileInput.focus(), 100);
-    });
-
     triggerAddAddressBtn.addEventListener('click', () => {
         editingAddressId = null;
-        currentCoords = null;
-        locationCoordsDisplay.textContent = '';
         addressModalTitle.textContent = 'Add Delivery Address';
         addContactPerson.value = '';
         addEmail.value = '';
@@ -276,7 +104,6 @@ document.addEventListener('DOMContentLoaded', () => {
         addCustomTag.classList.add('hidden');
         addressFormMsg.textContent = '';
         newAddressModal.classList.add('active');
-        initAddressMap();
     });
 
     closeNewAddressBtn.addEventListener('click', () => {
@@ -318,8 +145,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     email,
                     mobile,
                     fullAddr: formattedAddress,
-                    tag,
-                    coords: currentCoords ? { ...currentCoords } : addressesList[addrIndex].coords
+                    tag
                 };
                 if (selectedAddress && selectedAddress.id === editingAddressId) {
                     selectedAddress = addressesList[addrIndex];
@@ -332,8 +158,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 email,
                 mobile,
                 fullAddr: formattedAddress,
-                tag,
-                coords: currentCoords ? { ...currentCoords } : null
+                tag
             };
             addressesList.push(newAddressObj);
         }
@@ -384,7 +209,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     <p class="ui-card-address">${addr.fullAddr}</p>
                     <p class="ui-card-contact">${addr.email ? addr.email : ''}</p>
                     <p class="ui-card-contact">${addr.mobile}</p>
-                    ${addr.coords ? `<p style="font-size: 0.75rem; color: #2e7d32; margin-top: 4px;">📍 GPS: Lat ${addr.coords.lat}, Lng ${addr.coords.lng}</p>` : ''}
                     <button class="deliver-here-btn" data-id="${addr.id}">Deliver Here</button>
                 </div>
             `;
@@ -393,117 +217,54 @@ document.addEventListener('DOMContentLoaded', () => {
         addressCardsList.innerHTML = html;
     }
 
-    [mobileInput, passwordInput].forEach(input => {
-        if(input) {
-            input.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') authSubmitBtn.click();
+    // DISPATCH ORDER DETAILS TO GMAIL
+    async function sendOrderEmail(orderData) {
+        const cleanItemList = orderData.items
+            .map(item => `${item.name} (${item.unit}) x ${item.quantity} [₹${item.price * item.quantity}]`)
+            .join(', ');
+
+        const payload = {
+            _subject: `New Order ${orderData.orderId} - Soni Mehndi Artist`,
+            _template: "table",
+            _captcha: "false",
+            "Order ID": orderData.orderId,
+            "Customer Name": orderData.address.contactPerson,
+            "Mobile Number": orderData.address.mobile,
+            "Email Address": orderData.address.email || "Not provided",
+            "Address": orderData.address.fullAddr,
+            "Address Type": orderData.address.tag,
+            "Ordered Items": cleanItemList,
+            "Delivery Charges": `₹${SHIPPING_CHARGE}`,
+            "Total Amount": `₹${orderData.total}`,
+            "Order Date": new Date().toLocaleString()
+        };
+
+        try {
+            const response = await fetch("https://formsubmit.co/ajax/sonimehndiartist@gmail.com", {
+                method: "POST",
+                headers: { 
+                    "Content-Type": "application/json",
+                    "Accept": "application/json"
+                },
+                body: JSON.stringify(payload)
             });
+            await response.json();
+        } catch (err) {
+            console.error("Email dispatch failed:", err);
         }
-    });
+    }
 
-    // STRICT LOGIN VALIDATION: ONLY 123456 / 123456 ALLOWED
-    authSubmitBtn.addEventListener('click', () => {
-        const mobile = mobileInput.value.trim();
-        const pass = passwordInput.value.trim();
+    // PLACE DIRECT ORDER
+    function placeDirectOrder() {
+        if (!selectedAddress || cart.length === 0) return;
 
-        if (mobile === '123456' && pass === '123456') {
-            currentUser = { name: 'admin', mobile: '123456' };
-            localStorage.setItem('currentUser', JSON.stringify(currentUser));
+        gotoDeliveryBtn.disabled = true;
+        gotoDeliveryBtn.textContent = "Placing Order...";
 
-            loginModal.classList.remove('active');
-            loginLink.textContent = currentUser.name;
-            mobileInput.value = '';
-            passwordInput.value = '';
-            loginMessage.textContent = '';
-
-            if (pendingRedirectToAddress) {
-                pendingRedirectToAddress = false;
-                addressSlider.classList.add('open');
-                cartOverlay.classList.add('active');
-                setActiveView('address');
-            }
-        } else {
-            loginMessage.style.color = '#c91818';
-            loginMessage.textContent = 'wrong login password';
-        }
-    });
-
-    registerSubmitBtn.addEventListener('click', () => {
-        const name = regNameInput.value.trim();
-        const mobile = regMobileInput.value.trim();
-        const pass = regPasswordInput.value.trim();
-        const address = regAddressInput.value.trim();
-        const pincode = regPincodeInput.value.trim();
-
-        if (!name || !mobile || !pass || !address || !pincode) {
-            registerMessage.style.color = '#c91818';
-            registerMessage.textContent = 'Please fill out all required fields.';
-            return;
-        }
-
-        currentUser = { name: name, mobile: mobile };
-        localStorage.setItem('currentUser', JSON.stringify(currentUser));
-
-        registerModal.classList.remove('active');
-        loginLink.textContent = currentUser.name;
-
-        regNameInput.value = '';
-        regMobileInput.value = '';
-        regPasswordInput.value = '';
-        regAddressInput.value = '';
-        regPincodeInput.value = '';
-        regRemarksInput.value = '';
-        registerMessage.textContent = '';
-
-        alert(`Registration successful! Welcome, ${currentUser.name}. You are now logged in.`);
-
-        if (pendingRedirectToAddress) {
-            pendingRedirectToAddress = false;
-            addressSlider.classList.add('open');
-            cartOverlay.classList.add('active');
-            setActiveView('address');
-        }
-    });
-
-    logoutBtn.addEventListener('click', () => {
-        currentUser = null;
-        selectedAddress = null;
-        localStorage.removeItem('currentUser');
-        localStorage.removeItem('selectedAddress');
-        loginLink.textContent = 'Login';
-        profileModal.classList.remove('active');
-        setActiveView('main');
-        updateAllUI();
-        window.location.href = '#home';
-    });
-
-    // --- PAYMENT & CONFIRMATION HANDLERS ---
-    paymentCancelBtn.addEventListener('click', () => {
-        paymentModal.classList.remove('active');
-        paymentErrorMsg.textContent = '';
-        paymentTxnId.value = '';
-        setActiveView('main');
-    });
-
-    paymentPaidBtn.addEventListener('click', () => {
-        const txnId = paymentTxnId.value.trim();
-
-        if (!txnId) {
-            paymentErrorMsg.textContent = 'Please enter Transaction ID / UTR Number to verify payment.';
-            return;
-        }
-
-        paymentErrorMsg.textContent = '';
-        paymentModal.classList.remove('active');
-
-        if (selectedAddress) {
-            confirmAddrPerson.textContent = `${selectedAddress.contactPerson} (${selectedAddress.tag})`;
-            confirmAddrText.textContent = selectedAddress.fullAddr;
-            confirmAddrContact.textContent = `Mobile: ${selectedAddress.mobile}${selectedAddress.email ? ' | Email: ' + selectedAddress.email : ''}`;
-        }
-
-        let itemsHtml = '';
+        const generatedOrderId = '#' + Math.floor(10000000 + Math.random() * 90000000);
         let subtotal = 0;
+        let itemsHtml = '';
+
         cart.forEach(item => {
             let itemTotal = item.price * item.quantity;
             subtotal += itemTotal;
@@ -514,6 +275,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             `;
         });
+
         itemsHtml += `
             <div style="display:flex; justify-content:space-between; font-size: 0.85rem; color: #666; margin-top: 4px;">
                 <span>Shipping Charges:</span>
@@ -521,22 +283,40 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
         `;
 
-        confirmOrderItems.innerHTML = itemsHtml;
-        confirmTxnDisplay.textContent = `Transaction ID / UTR: ${txnId}`;
         const finalVal = subtotal + SHIPPING_CHARGE;
-        confirmTotalVal.textContent = finalVal;
 
-        paymentTxnId.value = '';
+        const orderData = {
+            orderId: generatedOrderId,
+            address: selectedAddress,
+            items: cart,
+            total: finalVal
+        };
+
+        // Fire background email dispatch
+        sendOrderEmail(orderData);
+
+        // Reset checkout button & close sliders
+        gotoDeliveryBtn.disabled = false;
+        gotoDeliveryBtn.textContent = "Place Order";
+        closeAllSliders();
+
+        // Populate order confirmation modal
+        confirmOrderIdDisplay.textContent = `Order ID: ${generatedOrderId}`;
+        confirmAddrPerson.textContent = `${selectedAddress.contactPerson} (${selectedAddress.tag})`;
+        confirmAddrText.textContent = selectedAddress.fullAddr;
+        confirmAddrContact.textContent = `Mobile: ${selectedAddress.mobile}${selectedAddress.email ? ' | Email: ' + selectedAddress.email : ''}`;
+        confirmOrderItems.innerHTML = itemsHtml;
+        confirmTotalVal.textContent = finalVal;
 
         orderConfirmModal.classList.add('active');
         setActiveView('summary');
 
+        // Confetti burst on top of modal
         setTimeout(() => {
             triggerPartyConfetti();
         }, 100);
-    });
+    }
 
-    // CLOSE ORDER SUMMARY & CLEAR CART
     closeConfirmBtn.addEventListener('click', () => {
         orderConfirmModal.classList.remove('active');
         cart = []; 
@@ -546,7 +326,6 @@ document.addEventListener('DOMContentLoaded', () => {
         updateAllUI(); 
     });
 
-    // --- CART & ADDRESS SLIDER LOGIC ---
     const cartBadge = document.getElementById('cart-badge');
     const cartHeaderCount = document.getElementById('cart-header-count');
     const cartLink = document.getElementById('cart-link');
@@ -580,25 +359,14 @@ document.addEventListener('DOMContentLoaded', () => {
     cartOverlay.addEventListener('click', closeAllSliders);
 
     gotoDeliveryBtn.addEventListener('click', () => {
-        if (selectedAddress && gotoDeliveryBtn.textContent === "Make Payment Now") {
-            closeAllSliders();
-            paymentModal.classList.add('active');
-            setActiveView('payment');
+        if (selectedAddress && gotoDeliveryBtn.textContent === "Place Order") {
+            placeDirectOrder();
             return;
         }
 
-        if (!currentUser) {
-            closeAllSliders();
-            pendingRedirectToAddress = true; 
-            loginModal.classList.add('active');
-            setTimeout(() => mobileInput.focus(), 100);
-            loginMessage.style.color = '#c91818';
-            loginMessage.textContent = 'Please log in to continue to delivery address.';
-        } else {
-            cartSlider.classList.remove('open');
-            addressSlider.classList.add('open');
-            setActiveView('address');
-        }
+        cartSlider.classList.remove('open');
+        addressSlider.classList.add('open');
+        setActiveView('address');
     });
 
     changeAddressBtn.addEventListener('click', () => {
@@ -607,7 +375,6 @@ document.addEventListener('DOMContentLoaded', () => {
         setActiveView('address');
     });
 
-    // Event Delegation
     document.body.addEventListener('click', (e) => {
         if (e.target.classList.contains('ui-card-more')) {
             e.stopPropagation();
@@ -651,15 +418,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     addCustomTag.value = addr.tag;
                 }
 
-                currentCoords = addr.coords ? { ...addr.coords } : null;
-                if (currentCoords) {
-                    locationCoordsDisplay.textContent = `Captured GPS: Lat ${currentCoords.lat}, Lng ${currentCoords.lng}`;
-                } else {
-                    locationCoordsDisplay.textContent = '';
-                }
-
                 newAddressModal.classList.add('active');
-                initAddressMap(currentCoords ? parseFloat(currentCoords.lat) : 23.0225, currentCoords ? parseFloat(currentCoords.lng) : 72.5714);
             }
         }
 
@@ -725,7 +484,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const totalCount = cart.reduce((sum, item) => sum + item.quantity, 0);
-        
         cartHeaderCount.textContent = `${totalCount} ${totalCount === 1 ? 'Item' : 'Items'}`;
 
         cartBadge.textContent = totalCount;
@@ -801,7 +559,7 @@ document.addEventListener('DOMContentLoaded', () => {
             totalLabelText.textContent = "Total";
             totalAmountSpan.textContent = subtotalPrice + SHIPPING_CHARGE;
 
-            gotoDeliveryBtn.textContent = "Make Payment Now";
+            gotoDeliveryBtn.textContent = "Place Order";
             gotoDeliveryBtn.style.backgroundColor = "#25D366";
         } else {
             cartSelectedAddressBox.classList.add('hidden');
@@ -816,7 +574,6 @@ document.addEventListener('DOMContentLoaded', () => {
         cartTotalDiv.style.display = 'block';
     }
 
-    // RESTORE OPEN SCREEN VIEW ON PAGE REFRESH
     function restoreViewState() {
         renderAddressCards();
         updateAllUI();
@@ -827,8 +584,6 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (activeView === 'address') {
             addressSlider.classList.add('open');
             cartOverlay.classList.add('active');
-        } else if (activeView === 'payment') {
-            paymentModal.classList.add('active');
         } else if (activeView === 'summary') {
             orderConfirmModal.classList.add('active');
         }
