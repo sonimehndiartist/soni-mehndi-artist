@@ -1,0 +1,61 @@
+name: Handle Order & Increment ID
+
+on:
+  repository_dispatch:
+    types: [new-order]
+
+jobs:
+  process-order:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Read and Increment Order ID
+        id: increment
+        run: |
+          COUNTER_FILE="data/counter.json"
+          if [ ! -f "$COUNTER_FILE" ]; then
+            echo '{"last_order_id": 4000000}' > "$COUNTER_FILE"
+          fi
+          
+          CURRENT_ID=$(jq '.last_order_id' "$COUNTER_FILE")
+          NEW_ID=$((CURRENT_ID + 1))
+          
+          echo "new_id=$NEW_ID" >> $GITHUB_OUTPUT
+          
+          # Update the counter file
+          jq ".last_order_id = $NEW_ID" "$COUNTER_FILE" > temp.json && mv temp.json "$COUNTER_FILE"
+
+      - name: Commit Updated Counter
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "Increment order ID to #${{ steps.increment.outputs.new_id }}"
+          file_pattern: 'data/counter.json'
+
+      - name: Send Email via FormSubmit
+        env:
+          ORDER_ID: "#${{ steps.increment.outputs.new_id }}"
+          CUSTOMER_NAME: "${{ github.event.client_payload.name }}"
+          MOBILE: "${{ github.event.client_payload.mobile }}"
+          ADDRESS: "${{ github.event.client_payload.address }}"
+          ITEMS: "${{ github.event.client_payload.items }}"
+          TOTAL: "${{ github.event.client_payload.total }}"
+        run: |
+          curl -X POST "https://formsubmit.co/ajax/sonimehndiartist@gmail.com" \
+            -H "Content-Type: application/json" \
+            -H "Accept: application/json" \
+            -d "{
+              \"_subject\": \"New Order $ORDER_ID - Soni Mehndi Artist\",
+              \"_template\": \"table\",
+              \"_captcha\": \"false\",
+              \"Order ID\": \"$ORDER_ID\",
+              \"Customer Name\": \"$CUSTOMER_NAME\",
+              \"Mobile Number\": \"$MOBILE\",
+              \"Delivery Address\": \"$ADDRESS\",
+              \"Ordered Items\": \"$ITEMS\",
+              \"Total Amount\": \"$TOTAL\",
+              \"Order Date\": \"$(date)\"
+            }"
