@@ -26,13 +26,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Party Shots (Confetti Burst directly above Modal)
     function triggerPartyConfetti() {
         if (typeof confetti === 'function') {
             const count = 220;
             const defaults = { 
                 origin: { y: 0.5 },
-                zIndex: 9999 // Renders in front of modal-overlay (z-index: 2000)
+                zIndex: 9999 
             };
 
             function fire(particleRatio, opts) {
@@ -49,7 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Modal & UI Elements
+    // Modal & Elements
     const orderConfirmModal = document.getElementById('order-confirm-modal');
     const closeConfirmBtn = document.getElementById('close-confirm-btn');
     const confirmOrderIdDisplay = document.getElementById('confirm-order-id-display');
@@ -261,7 +260,13 @@ document.addEventListener('DOMContentLoaded', () => {
         gotoDeliveryBtn.disabled = true;
         gotoDeliveryBtn.textContent = "Placing Order...";
 
-        const generatedOrderId = '#' + Math.floor(10000000 + Math.random() * 90000000);
+        // GET SEQUENTIAL ORDER ID FROM LOCAL STORAGE (Starts at 4000001)
+        let currentOrderIdNum = parseInt(localStorage.getItem('lastOrderId')) || 4000001;
+        const generatedOrderId = '#' + currentOrderIdNum;
+        
+        // Save the next number in sequence for the next order
+        localStorage.setItem('lastOrderId', currentOrderIdNum + 1);
+
         let subtotal = 0;
         let itemsHtml = '';
 
