@@ -217,7 +217,7 @@ document.addEventListener('DOMContentLoaded', () => {
         addressCardsList.innerHTML = html;
     }
 
-    // PLACE DIRECT ORDER & SYNC GLOBAL ID VIA GOOGLE SHEETS
+    // PLACE DIRECT ORDER & SYNC GLOBAL ID VIA GOOGLE APPS SCRIPT
     async function placeDirectOrder() {
         if (!selectedAddress || cart.length === 0) return;
 
@@ -261,10 +261,13 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const response = await fetch("https://script.google.com/macros/s/AKfycby3OR83lr_mQgcEYLGh5XtkkNZZw5hASqoEIXnGPr160tiJ0-WuJJ2RWxuZmv5hSOFu2w/exec", {
                 method: "POST",
+                headers: {
+                    "Content-Type": "text/plain;charset=utf-8"
+                },
                 body: JSON.stringify(payload)
             });
             const result = await response.json();
-            if (result.orderId) {
+            if (result && result.orderId) {
                 generatedOrderId = "#" + result.orderId;
             }
         } catch (err) {
