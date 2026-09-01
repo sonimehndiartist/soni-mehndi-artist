@@ -266,7 +266,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 },
                 body: JSON.stringify(payload)
             });
-            const result = await response.json();
+            
+            const textResponse = await response.text();
+            const result = JSON.parse(textResponse);
             if (result && result.orderId) {
                 generatedOrderId = "#" + result.orderId;
             }
