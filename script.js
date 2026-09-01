@@ -26,6 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // Party Shots (Confetti Burst directly above Modal)
     function triggerPartyConfetti() {
         if (typeof confetti === 'function') {
             const count = 220;
@@ -48,7 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Modal & Elements
+    // Modal & UI Elements
     const orderConfirmModal = document.getElementById('order-confirm-modal');
     const closeConfirmBtn = document.getElementById('close-confirm-btn');
     const confirmOrderIdDisplay = document.getElementById('confirm-order-id-display');
@@ -216,58 +217,15 @@ document.addEventListener('DOMContentLoaded', () => {
         addressCardsList.innerHTML = html;
     }
 
-    // DISPATCH ORDER DETAILS TO GMAIL
-    async function sendOrderEmail(orderData) {
-        const cleanItemList = orderData.items
-            .map(item => `${item.name} (${item.unit}) x ${item.quantity} [₹${item.price * item.quantity}]`)
-            .join(', ');
-
-        const payload = {
-            _subject: `New Order ${orderData.orderId} - Soni Mehndi Artist`,
-            _template: "table",
-            _captcha: "false",
-            "Order ID": orderData.orderId,
-            "Customer Name": orderData.address.contactPerson,
-            "Mobile Number": orderData.address.mobile,
-            "Email Address": orderData.address.email || "Not provided",
-            "Address": orderData.address.fullAddr,
-            "Address Type": orderData.address.tag,
-            "Ordered Items": cleanItemList,
-            "Delivery Charges": `₹${SHIPPING_CHARGE}`,
-            "Total Amount": `₹${orderData.total}`,
-            "Order Date": new Date().toLocaleString()
-        };
-
-        try {
-            const response = await fetch("https://formsubmit.co/ajax/sonimehndiartist@gmail.com", {
-                method: "POST",
-                headers: { 
-                    "Content-Type": "application/json",
-                    "Accept": "application/json"
-                },
-                body: JSON.stringify(payload)
-            });
-            await response.json();
-        } catch (err) {
-            console.error("Email dispatch failed:", err);
-        }
-    }
-
-    // PLACE DIRECT ORDER
-    function placeDirectOrder() {
+    // PLACE DIRECT ORDER & SYNC GLOBAL ID VIA GOOGLE SHEETS
+    async function placeDirectOrder() {
         if (!selectedAddress || cart.length === 0) return;
 
         gotoDeliveryBtn.disabled = true;
         gotoDeliveryBtn.textContent = "Placing Order...";
 
-        // GET SEQUENTIAL ORDER ID FROM LOCAL STORAGE (Starts at 4000001)
-        let currentOrderIdNum = parseInt(localStorage.getItem('lastOrderId')) || 4000001;
-        const generatedOrderId = '#' + currentOrderIdNum;
-        
-        // Save the next number in sequence for the next order
-        localStorage.setItem('lastOrderId', currentOrderIdNum + 1);
-
         let subtotal = 0;
+        let itemsText = '';
         let itemsHtml = '';
 
         cart.forEach(item => {
@@ -279,6 +237,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <span style="font-weight:bold;">₹${itemTotal}</span>
                 </div>
             `;
+            itemsText += `${item.name} (${item.unit}) x ${item.quantity}, `;
         });
 
         itemsHtml += `
@@ -290,22 +249,32 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const finalVal = subtotal + SHIPPING_CHARGE;
 
-        const orderData = {
-            orderId: generatedOrderId,
-            address: selectedAddress,
-            items: cart,
-            total: finalVal
+        const payload = {
+            CustomerName: selectedAddress.contactPerson,
+            Mobile: selectedAddress.mobile,
+            Total: `₹${finalVal}`,
+            Items: itemsText
         };
 
-        // Fire background email dispatch
-        sendOrderEmail(orderData);
+        let generatedOrderId = "#4000001";
 
-        // Reset checkout button & close sliders
+        try {
+            const response = await fetch("https://script.google.com/macros/s/AKfycby3OR83lr_mQgcEYLGh5XtkkNZZw5hASqoEIXnGPr160tiJ0-WuJJ2RWxuZmv5hSOFu2w/exec", {
+                method: "POST",
+                body: JSON.stringify(payload)
+            });
+            const result = await response.json();
+            if (result.orderId) {
+                generatedOrderId = "#" + result.orderId;
+            }
+        } catch (err) {
+            console.error("Google Sheets sync error:", err);
+        }
+
         gotoDeliveryBtn.disabled = false;
         gotoDeliveryBtn.textContent = "Place Order";
         closeAllSliders();
 
-        // Populate order confirmation modal
         confirmOrderIdDisplay.textContent = `Order ID: ${generatedOrderId}`;
         confirmAddrPerson.textContent = `${selectedAddress.contactPerson} (${selectedAddress.tag})`;
         confirmAddrText.textContent = selectedAddress.fullAddr;
@@ -316,7 +285,6 @@ document.addEventListener('DOMContentLoaded', () => {
         orderConfirmModal.classList.add('active');
         setActiveView('summary');
 
-        // Confetti burst on top of modal
         setTimeout(() => {
             triggerPartyConfetti();
         }, 100);
