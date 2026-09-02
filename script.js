@@ -217,15 +217,55 @@ document.addEventListener('DOMContentLoaded', () => {
         addressCardsList.innerHTML = html;
     }
 
-    // PLACE DIRECT ORDER & SYNC GLOBAL ID VIA GOOGLE APPS SCRIPT
-    async function placeDirectOrder() {
+    // DISPATCH ORDER DETAILS SECURELY TO GMAIL VIA FORMSUBMIT
+    async function sendOrderEmail(orderData) {
+        const cleanItemList = orderData.items
+            .map(item => `${item.name} (${item.unit}) x ${item.quantity} [₹${item.price * item.quantity}]`)
+            .join(', ');
+
+        const payload = {
+            _subject: `New Order ${orderData.orderId} - Soni Mehndi Artist`,
+            _template: "table",
+            _captcha: "false",
+            "Order ID": orderData.orderId,
+            "Customer Name": orderData.address.contactPerson,
+            "Mobile Number": orderData.address.mobile,
+            "Email Address": orderData.address.email || "Not provided",
+            "Address": orderData.address.fullAddr,
+            "Address Type": orderData.address.tag,
+            "Ordered Items": cleanItemList,
+            "Delivery Charges": `₹${SHIPPING_CHARGE}`,
+            "Total Amount": `₹${orderData.total}`,
+            "Order Date": new Date().toLocaleString()
+        };
+
+        try {
+            await fetch("https://formsubmit.co/ajax/sonimehndiartist@gmail.com", {
+                method: "POST",
+                headers: { 
+                    "Content-Type": "application/json",
+                    "Accept": "application/json"
+                },
+                body: JSON.stringify(payload)
+            });
+        } catch (err) {
+            console.error("Email dispatch failed:", err);
+        }
+    }
+
+    // PLACE DIRECT ORDER 
+    function placeDirectOrder() {
         if (!selectedAddress || cart.length === 0) return;
 
         gotoDeliveryBtn.disabled = true;
         gotoDeliveryBtn.textContent = "Placing Order...";
 
+        // Generate sequential order ID locally (starts at 4000001)
+        let currentOrderIdNum = parseInt(localStorage.getItem('lastOrderId')) || 4000001;
+        const generatedOrderId = '#' + currentOrderIdNum;
+        localStorage.setItem('lastOrderId', currentOrderIdNum + 1);
+
         let subtotal = 0;
-        let itemsText = '';
         let itemsHtml = '';
 
         cart.forEach(item => {
@@ -237,7 +277,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     <span style="font-weight:bold;">₹${itemTotal}</span>
                 </div>
             `;
-            itemsText += `${item.name} (${item.unit}) x ${item.quantity}, `;
         });
 
         itemsHtml += `
@@ -249,39 +288,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const finalVal = subtotal + SHIPPING_CHARGE;
 
-        const payload = {
-            CustomerName: selectedAddress.contactPerson,
-            Mobile: selectedAddress.mobile,
-            Total: `₹${finalVal}`,
-            Items: itemsText
+        const orderData = {
+            orderId: generatedOrderId,
+            address: selectedAddress,
+            items: cart,
+            total: finalVal
         };
 
-        let generatedOrderId = "#4000001";
+        // Send email securely in the background
+        sendOrderEmail(orderData);
 
-        try {
-            const response = await fetch("https://script.google.com/macros/s/AKfycby3OR83lr_mQgcEYLGh5XtkkNZZw5hASqoEIXnGPr160tiJ0-WuJJ2RWxuZmv5hSOFu2w/exec", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "text/plain;charset=utf-8"
-                },
-                body: JSON.stringify(payload)
-            });
-            
-            const textResponse = await response.text();
-            
-            // Check if response is valid JSON before parsing
-            if (textResponse.trim().startsWith("{")) {
-                const result = JSON.parse(textResponse);
-                if (result && result.orderId) {
-                    generatedOrderId = "#" + result.orderId;
-                }
-            } else {
-                console.error("Apps Script returned HTML/Error instead of JSON. Check deployment permissions.");
-            }
-        } catch (err) {
-            console.error("Google Sheets sync error:", err);
-        }
-
+        // Reset button & open confirmation modal
         gotoDeliveryBtn.disabled = false;
         gotoDeliveryBtn.textContent = "Place Order";
         closeAllSliders();
