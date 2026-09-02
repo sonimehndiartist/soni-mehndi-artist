@@ -70,8 +70,8 @@ document.addEventListener('DOMContentLoaded', () => {
         return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
     }
 
-    // SAVE SCROLL POSITION BEFORE RELOAD/REFRESH
-    window.addEventListener('beforeunload', () => {
+   // CONTINUOUSLY SAVE SCROLL POSITION AS USER SCROLLS
+    window.addEventListener('scroll', () => {
         sessionStorage.setItem('scrollPosition', window.scrollY);
     });
 
