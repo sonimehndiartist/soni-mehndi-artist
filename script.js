@@ -111,11 +111,11 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     saveAddressBtn.addEventListener('click', () => {
-        const contactPerson = addContactPerson.value.trim();
-        const email = addEmail.value.trim();
-        const mobile = addMobile.value.trim();
-        const fullAddr = addFullAddress.value.trim();
-        const pincode = addPincode.value.trim();
+        let contactPerson = addContactPerson.value.trim();
+        let email = addEmail.value.trim();
+        let mobile = addMobile.value.trim();
+        let fullAddr = addFullAddress.value.trim();
+        let pincode = addPincode.value.trim();
         
         let tag = addTagType.value;
         if (tag === 'Other') {
@@ -134,13 +134,37 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // Validate Mobile Number to ensure it is exactly 10 digits
+        // 1. Mobile Number must be exactly 10 digits
         const mobileRegex = /^\d{10}$/;
         if (!mobileRegex.test(mobile)) {
             addressFormMsg.style.color = '#c91818';
             addressFormMsg.textContent = 'Mobile number must be exactly 10 digits.';
             return;
         }
+
+        // 2. Email validation (if provided)
+        if (email) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                addressFormMsg.style.color = '#c91818';
+                addressFormMsg.textContent = 'Please enter a valid email address.';
+                return;
+            }
+        }
+
+        // 3. PIN Code must be numbers only
+        const pincodeRegex = /^\d+$/;
+        if (!pincodeRegex.test(pincode)) {
+            addressFormMsg.style.color = '#c91818';
+            addressFormMsg.textContent = 'PIN code must contain numbers only.';
+            return;
+        }
+
+        // 4. Contact person full name first alphabet must be capital
+        contactPerson = contactPerson.charAt(0).toUpperCase() + contactPerson.slice(1);
+
+        // 5. Full address first alphabet must be capital
+        fullAddr = fullAddr.charAt(0).toUpperCase() + fullAddr.slice(1);
 
         const formattedAddress = `${fullAddr}, ${pincode}`;
 
