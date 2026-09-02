@@ -75,8 +75,40 @@ document.addEventListener('DOMContentLoaded', () => {
         sessionStorage.setItem('scrollPosition', window.scrollY);
     });
 
+    // DYNAMICALLY FETCH AND RENDER PRODUCTS FROM products.json
+    async function loadProducts() {
+        try {
+            const response = await fetch('products.json');
+            const products = await response.json();
+            const container = document.getElementById('product-grid-container');
+            
+            if (!container) return;
+
+            let html = '';
+            products.forEach(prod => {
+                html += `
+                    <div class="product-card" style="border: 1px solid #ddd; padding: 15px; border-radius: 8px; text-align: center; background: #fff;">
+                        <img src="${prod.image}" alt="${prod.name}" class="product-img" style="width: 100%; height: 160px; object-fit: cover; border-radius: 6px; margin-bottom: 10px;">
+                        <h3 class="product-title" style="font-size: 1rem; margin-bottom: 5px;">${prod.name}</h3>
+                        <p class="product-unit" style="font-size: 0.85rem; color: #666; margin-bottom: 5px;">${prod.unit}</p>
+                        <p class="product-price" style="font-weight: bold; color: #7b2c22; margin-bottom: 10px;">₹${prod.price}</p>
+                        <div class="product-actions" data-name="${prod.name}" data-unit="${prod.unit}" data-price="${prod.price}">
+                            <button class="add-to-cart-btn" data-name="${prod.name}" data-unit="${prod.unit}" data-price="${prod.price}" style="padding: 8px 12px; background: #7b2c22; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">Add to Cart</button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+            updateAllUI(); 
+        } catch (err) {
+            console.error("Failed to load products:", err);
+        }
+    }
+
     // RESTORE PREVIOUS TAB AND SCROLL POSITION ON REFRESH
     function restoreViewState() {
+        loadProducts();
         renderAddressCards();
         updateAllUI();
 
@@ -421,7 +453,6 @@ document.addEventListener('DOMContentLoaded', () => {
             total: finalVal
         };
 
-        // Send email backup
         sendOrderEmail(orderData);
 
         gotoDeliveryBtn.disabled = false;
@@ -610,8 +641,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const totalCount = cart.reduce((sum, item) => sum + item.quantity, 0);
-        cartHeaderCount.textContent = `${totalCount} ${totalCount === 1 ? 'Item' : 'Items'}`;
-
         cartBadge.textContent = totalCount;
         if (totalCount > 0) {
             cartBadge.style.display = 'flex';
@@ -636,7 +665,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 `;
             } else {
                 area.innerHTML = `
-                    <button class="add-to-cart-btn" data-name="${name}" data-unit="${unit}" data-price="${price}">Add to Cart</button>
+                    <button class="add-to-cart-btn" data-name="${name}" data-unit="${unit}" data-price="${price}" style="padding: 8px 12px; background: #7b2c22; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">Add to Cart</button>
                 `;
             }
         });
