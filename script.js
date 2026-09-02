@@ -253,7 +253,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // PLACE DIRECT ORDER & SYNC GLOBAL ID VIA SHEETDB
+    // PLACE DIRECT ORDER & SYNC ALL DETAILS VIA SHEETDB
     async function placeDirectOrder() {
         if (!selectedAddress || cart.length === 0) return;
 
@@ -284,6 +284,7 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
 
         const finalVal = subtotal + SHIPPING_CHARGE;
+        const orderDateStr = new Date().toLocaleString();
 
         // Fetch & Increment Global Order ID from SheetDB
         let currentOrderIdNum = 4000001;
@@ -314,8 +315,13 @@ document.addEventListener('DOMContentLoaded', () => {
                         OrderId: currentOrderIdNum,
                         CustomerName: selectedAddress.contactPerson,
                         Mobile: selectedAddress.mobile,
+                        Email: selectedAddress.email || "Not provided",
+                        Address: selectedAddress.fullAddr,
+                        AddressType: selectedAddress.tag,
+                        OrderedItems: itemsText,
+                        DeliveryCharges: "₹" + SHIPPING_CHARGE,
                         Total: "₹" + finalVal,
-                        Date: new Date().toLocaleString()
+                        Date: orderDateStr
                     }
                 })
             });
@@ -334,7 +340,7 @@ document.addEventListener('DOMContentLoaded', () => {
             total: finalVal
         };
 
-        // Send email in background
+        // Send email backup
         sendOrderEmail(orderData);
 
         gotoDeliveryBtn.disabled = false;
