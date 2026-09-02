@@ -75,35 +75,34 @@ document.addEventListener('DOMContentLoaded', () => {
         sessionStorage.setItem('scrollPosition', window.scrollY);
     });
 
-    // DYNAMICALLY FETCH AND RENDER PRODUCTS FROM products.json
-    async function loadProducts() {
-        try {
-            const response = await fetch('products.json');
-            const products = await response.json();
-            const container = document.getElementById('product-grid-container');
-            
-            if (!container) return;
+    // RENDER PRODUCTS DIRECTLY
+    function loadProducts() {
+        const products = [
+            { id: 1, name: "Bridal Henna Cones", unit: "Pack of 5", price: 350, image: "images/cone.jpg" },
+            { id: 2, name: "Organic Sojat Henna Powder", unit: "250g", price: 450, image: "images/powder.jpg" },
+            { id: 3, name: "Pure Henna Aftercare Oil", unit: "30ml", price: 299, image: "images/oil.jpg" }
+        ];
 
-            let html = '';
-            products.forEach(prod => {
-                html += `
-                    <div class="product-card" style="border: 1px solid #ddd; padding: 15px; border-radius: 8px; text-align: center; background: #fff;">
-                        <img src="${prod.image}" alt="${prod.name}" class="product-img" style="width: 100%; height: 160px; object-fit: cover; border-radius: 6px; margin-bottom: 10px;">
-                        <h3 class="product-title" style="font-size: 1rem; margin-bottom: 5px;">${prod.name}</h3>
-                        <p class="product-unit" style="font-size: 0.85rem; color: #666; margin-bottom: 5px;">${prod.unit}</p>
-                        <p class="product-price" style="font-weight: bold; color: #7b2c22; margin-bottom: 10px;">₹${prod.price}</p>
-                        <div class="product-actions" data-name="${prod.name}" data-unit="${prod.unit}" data-price="${prod.price}">
-                            <button class="add-to-cart-btn" data-name="${prod.name}" data-unit="${prod.unit}" data-price="${prod.price}" style="padding: 8px 12px; background: #7b2c22; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">Add to Cart</button>
-                        </div>
+        const container = document.getElementById('product-grid-container');
+        if (!container) return;
+
+        let html = '';
+        products.forEach(prod => {
+            html += `
+                <div class="product-card">
+                    <img src="${prod.image}" alt="${prod.name}" class="product-img" onerror="this.src='https://via.placeholder.com/150?text=Mehndi+Product'">
+                    <h3 class="product-title">${prod.name}</h3>
+                    <p class="product-unit">${prod.unit}</p>
+                    <p class="product-price">₹${prod.price}</p>
+                    <div class="product-actions" data-name="${prod.name}" data-unit="${prod.unit}" data-price="${prod.price}">
+                        <button class="add-to-cart-btn" data-name="${prod.name}" data-unit="${prod.unit}" data-price="${prod.price}">Add to Cart</button>
                     </div>
-                `;
-            });
+                </div>
+            `;
+        });
 
-            container.innerHTML = html;
-            updateAllUI(); 
-        } catch (err) {
-            console.error("Failed to load products:", err);
-        }
+        container.innerHTML = html;
+        updateAllUI();
     }
 
     // RESTORE PREVIOUS TAB AND SCROLL POSITION ON REFRESH
@@ -215,7 +214,6 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // 1. Mobile Number must be exactly 10 digits
         const mobileRegex = /^\d{10}$/;
         if (!mobileRegex.test(mobile)) {
             addressFormMsg.style.color = '#c91818';
@@ -223,7 +221,6 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // 2. Email validation (if provided)
         if (email) {
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             if (!emailRegex.test(email)) {
@@ -233,7 +230,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        // 3. PIN Code must be numbers only
         const pincodeRegex = /^\d+$/;
         if (!pincodeRegex.test(pincode)) {
             addressFormMsg.style.color = '#c91818';
@@ -241,10 +237,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // 4. Capitalize first letter of every word in full name
         contactPerson = capitalizeWords(contactPerson);
-
-        // 5. Capitalize first letter of every word in full address
         fullAddr = capitalizeWords(fullAddr);
 
         const formattedAddress = `${fullAddr}, ${pincode}`;
@@ -330,7 +323,6 @@ document.addEventListener('DOMContentLoaded', () => {
         addressCardsList.innerHTML = html;
     }
 
-    // DISPATCH ORDER DETAILS SECURELY TO GMAIL VIA FORMSUBMIT
     async function sendOrderEmail(orderData) {
         const cleanItemList = orderData.items
             .map(item => `${item.name} (${item.unit}) x ${item.quantity} [₹${item.price * item.quantity}]`)
@@ -366,7 +358,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // PLACE DIRECT ORDER & SYNC ALL DETAILS VIA SHEETDB
     async function placeDirectOrder() {
         if (!selectedAddress || cart.length === 0) return;
 
@@ -399,7 +390,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const finalVal = subtotal + SHIPPING_CHARGE;
         const formattedDateTimeStr = getFormattedDateTime();
 
-        // Fetch & Increment Global Order ID from SheetDB
         let currentOrderIdNum = 4000001;
         const sheetDbUrl = "https://sheetdb.io/api/v1/63vq1gt4gop10";
 
@@ -641,6 +631,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const totalCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+        cartHeaderCount.textContent = `${totalCount} ${totalCount === 1 ? 'Item' : 'Items'}`;
+
         cartBadge.textContent = totalCount;
         if (totalCount > 0) {
             cartBadge.style.display = 'flex';
@@ -665,7 +657,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 `;
             } else {
                 area.innerHTML = `
-                    <button class="add-to-cart-btn" data-name="${name}" data-unit="${unit}" data-price="${price}" style="padding: 8px 12px; background: #7b2c22; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">Add to Cart</button>
+                    <button class="add-to-cart-btn" data-name="${name}" data-unit="${unit}" data-price="${price}">Add to Cart</button>
                 `;
             }
         });
