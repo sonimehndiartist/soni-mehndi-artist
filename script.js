@@ -253,7 +253,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-   // PLACE DIRECT ORDER & SYNC GLOBAL ID VIA JSONBIN & EMAIL VIA FORMSUBMIT
+    // PLACE DIRECT ORDER & SYNC GLOBAL ID VIA JSONBIN
     async function placeDirectOrder() {
         if (!selectedAddress || cart.length === 0) return;
 
@@ -285,22 +285,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const finalVal = subtotal + SHIPPING_CHARGE;
 
-        // 1. FETCH & INCREMENT GLOBAL ORDER ID FROM JSONBIN
+        // Fetch & Increment Global Order ID from JSONBin
         let currentOrderIdNum = 4000001;
-        const binId = "YOUR_BIN_ID"; // <-- Paste your JSONBin ID here
+        const binId = "6a97aa1eda38895dfe2ddc09";
 
         try {
-            // Fetch current counter
-            const getRes = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
-                headers: { "X-Master-Key": "" } // Leave blank if public bin or put your free jsonbin key
-            });
+            const getRes = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`);
             const getData = await getRes.json();
             
-            if (getData && getData.record && getData.record.last_order_id) {
+            if (getData && getData.record && typeof getData.record.last_order_id === 'number') {
                 currentOrderIdNum = getData.record.last_order_id + 1;
             }
 
-            // Update counter globally on cloud
             await fetch(`https://api.jsonbin.io/v3/b/${binId}`, {
                 method: "PUT",
                 headers: {
@@ -323,10 +319,9 @@ document.addEventListener('DOMContentLoaded', () => {
             total: finalVal
         };
 
-        // 2. SEND EMAIL NOTIFICATION TO GMAIL VIA FORMSUBMIT
+        // Send email in background
         sendOrderEmail(orderData);
 
-        // Reset button & open confirmation modal
         gotoDeliveryBtn.disabled = false;
         gotoDeliveryBtn.textContent = "Place Order";
         closeAllSliders();
