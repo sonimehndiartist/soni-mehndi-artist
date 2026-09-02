@@ -56,6 +56,20 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Helper function to format date as DD/MM/YYYY hh:mm:ss
+    function getFormattedDateTime() {
+        const now = new Date();
+        const day = String(now.getDate()).padStart(2, '0');
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const year = now.getFullYear();
+        
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        const seconds = String(now.getSeconds()).padStart(2, '0');
+
+        return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
+    }
+
     // SAVE SCROLL POSITION BEFORE REFRESH
     window.addEventListener('beforeunload', () => {
         sessionStorage.setItem('scrollPosition', window.scrollY);
@@ -303,7 +317,7 @@ document.addEventListener('DOMContentLoaded', () => {
             "Ordered Items": cleanItemList,
             "Delivery Charges": `₹${SHIPPING_CHARGE}`,
             "Total Amount": `₹${orderData.total}`,
-            "Order Date": new Date().toLocaleString()
+            "Order Date": getFormattedDateTime()
         };
 
         try {
@@ -351,7 +365,7 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
 
         const finalVal = subtotal + SHIPPING_CHARGE;
-        const orderDateStr = new Date().toLocaleString();
+        const formattedDateTimeStr = getFormattedDateTime();
 
         // Fetch & Increment Global Order ID from SheetDB
         let currentOrderIdNum = 4000001;
@@ -388,7 +402,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         OrderedItems: itemsText,
                         DeliveryCharges: "₹" + SHIPPING_CHARGE,
                         Total: "₹" + finalVal,
-                        Date: orderDateStr
+                        Date: formattedDateTimeStr
                     }
                 })
             });
