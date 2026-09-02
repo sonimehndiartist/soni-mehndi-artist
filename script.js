@@ -253,7 +253,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // PLACE DIRECT ORDER & SYNC GLOBAL ID VIA JSONBIN
+    // PLACE DIRECT ORDER & SYNC GLOBAL ID VIA SHEETDB
     async function placeDirectOrder() {
         if (!selectedAddress || cart.length === 0) return;
 
@@ -285,27 +285,42 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const finalVal = subtotal + SHIPPING_CHARGE;
 
-        // Fetch & Increment Global Order ID from JSONBin
+        // Fetch & Increment Global Order ID from SheetDB
         let currentOrderIdNum = 4000001;
-        const binId = "6a97aa1eda38895dfe2ddc09";
+        const sheetDbUrl = "https://sheetdb.io/api/v1/63vq1gt4gop10";
 
         try {
-            const getRes = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`);
-            const getData = await getRes.json();
-            
-            if (getData && getData.record && typeof getData.record.last_order_id === 'number') {
-                currentOrderIdNum = getData.record.last_order_id + 1;
+            const getRes = await fetch(sheetDbUrl);
+            const rows = await getRes.json();
+
+            if (Array.isArray(rows) && rows.length > 0) {
+                let maxId = 4000000;
+                rows.forEach(row => {
+                    let idVal = parseInt(String(row.OrderId || "").replace("#", ""));
+                    if (!isNaN(idVal) && idVal > maxId) {
+                        maxId = idVal;
+                    }
+                });
+                currentOrderIdNum = maxId + 1;
             }
 
-            await fetch(`https://api.jsonbin.io/v3/b/${binId}`, {
-                method: "PUT",
+            await fetch(sheetDbUrl, {
+                method: "POST",
                 headers: {
                     "Content-Type": "application/json"
                 },
-                body: JSON.stringify({ last_order_id: currentOrderIdNum })
+                body: JSON.stringify({
+                    data: {
+                        OrderId: currentOrderIdNum,
+                        CustomerName: selectedAddress.contactPerson,
+                        Mobile: selectedAddress.mobile,
+                        Total: "₹" + finalVal,
+                        Date: new Date().toLocaleString()
+                    }
+                })
             });
         } catch (err) {
-            console.error("Global ID sync error, using fallback:", err);
+            console.error("SheetDB global sync error, using fallback:", err);
             currentOrderIdNum = parseInt(localStorage.getItem('lastOrderId')) || 4000001;
             localStorage.setItem('lastOrderId', currentOrderIdNum + 1);
         }
