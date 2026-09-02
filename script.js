@@ -134,6 +134,14 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        // Validate Mobile Number to ensure it is exactly 10 digits
+        const mobileRegex = /^\d{10}$/;
+        if (!mobileRegex.test(mobile)) {
+            addressFormMsg.style.color = '#c91818';
+            addressFormMsg.textContent = 'Mobile number must be exactly 10 digits.';
+            return;
+        }
+
         const formattedAddress = `${fullAddr}, ${pincode}`;
 
         if (editingAddressId !== null) {
