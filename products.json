@@ -1,0 +1,23 @@
+[
+  {
+    "id": 1,
+    "name": "Bridal Henna Cones",
+    "unit": "Pack of 5",
+    "price": 350,
+    "image": "images/cone.jpg"
+  },
+  {
+    "id": 2,
+    "name": "Organic Sojat Henna Powder",
+    "unit": "250g",
+    "price": 450,
+    "image": "images/powder.jpg"
+  },
+  {
+    "id": 3,
+    "name": "Pure Henna Aftercare Oil",
+    "unit": "30ml",
+    "price": 299,
+    "image": "images/oil.jpg"
+  }
+]
