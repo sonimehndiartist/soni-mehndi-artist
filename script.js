@@ -253,19 +253,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // PLACE DIRECT ORDER 
-    function placeDirectOrder() {
+   // PLACE DIRECT ORDER & SYNC GLOBAL ID VIA JSONBIN & EMAIL VIA FORMSUBMIT
+    async function placeDirectOrder() {
         if (!selectedAddress || cart.length === 0) return;
 
         gotoDeliveryBtn.disabled = true;
         gotoDeliveryBtn.textContent = "Placing Order...";
 
-        // Generate sequential order ID locally (starts at 4000001)
-        let currentOrderIdNum = parseInt(localStorage.getItem('lastOrderId')) || 4000001;
-        const generatedOrderId = '#' + currentOrderIdNum;
-        localStorage.setItem('lastOrderId', currentOrderIdNum + 1);
-
         let subtotal = 0;
+        let itemsText = '';
         let itemsHtml = '';
 
         cart.forEach(item => {
@@ -277,6 +273,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <span style="font-weight:bold;">₹${itemTotal}</span>
                 </div>
             `;
+            itemsText += `${item.name} (${item.unit}) x ${item.quantity}, `;
         });
 
         itemsHtml += `
@@ -288,6 +285,37 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const finalVal = subtotal + SHIPPING_CHARGE;
 
+        // 1. FETCH & INCREMENT GLOBAL ORDER ID FROM JSONBIN
+        let currentOrderIdNum = 4000001;
+        const binId = "YOUR_BIN_ID"; // <-- Paste your JSONBin ID here
+
+        try {
+            // Fetch current counter
+            const getRes = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
+                headers: { "X-Master-Key": "" } // Leave blank if public bin or put your free jsonbin key
+            });
+            const getData = await getRes.json();
+            
+            if (getData && getData.record && getData.record.last_order_id) {
+                currentOrderIdNum = getData.record.last_order_id + 1;
+            }
+
+            // Update counter globally on cloud
+            await fetch(`https://api.jsonbin.io/v3/b/${binId}`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ last_order_id: currentOrderIdNum })
+            });
+        } catch (err) {
+            console.error("Global ID sync error, using fallback:", err);
+            currentOrderIdNum = parseInt(localStorage.getItem('lastOrderId')) || 4000001;
+            localStorage.setItem('lastOrderId', currentOrderIdNum + 1);
+        }
+
+        const generatedOrderId = '#' + currentOrderIdNum;
+
         const orderData = {
             orderId: generatedOrderId,
             address: selectedAddress,
@@ -295,7 +323,7 @@ document.addEventListener('DOMContentLoaded', () => {
             total: finalVal
         };
 
-        // Send email securely in the background
+        // 2. SEND EMAIL NOTIFICATION TO GMAIL VIA FORMSUBMIT
         sendOrderEmail(orderData);
 
         // Reset button & open confirmation modal
