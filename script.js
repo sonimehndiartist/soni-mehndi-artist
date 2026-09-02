@@ -268,9 +268,15 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             
             const textResponse = await response.text();
-            const result = JSON.parse(textResponse);
-            if (result && result.orderId) {
-                generatedOrderId = "#" + result.orderId;
+            
+            // Check if response is valid JSON before parsing
+            if (textResponse.trim().startsWith("{")) {
+                const result = JSON.parse(textResponse);
+                if (result && result.orderId) {
+                    generatedOrderId = "#" + result.orderId;
+                }
+            } else {
+                console.error("Apps Script returned HTML/Error instead of JSON. Check deployment permissions.");
             }
         } catch (err) {
             console.error("Google Sheets sync error:", err);
