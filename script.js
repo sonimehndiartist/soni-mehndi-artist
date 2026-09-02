@@ -49,6 +49,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // Helper function to capitalize the first letter of every word after a space
+    function capitalizeWords(str) {
+        return str.replace(/\b\w/g, function(match) {
+            return match.toUpperCase();
+        });
+    }
+
     // Modal & UI Elements
     const orderConfirmModal = document.getElementById('order-confirm-modal');
     const closeConfirmBtn = document.getElementById('close-confirm-btn');
@@ -160,11 +167,11 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // 4. Contact person full name first alphabet must be capital
-        contactPerson = contactPerson.charAt(0).toUpperCase() + contactPerson.slice(1);
+        // 4. Capitalize first letter of every word in contact person's full name
+        contactPerson = capitalizeWords(contactPerson);
 
-        // 5. Full address first alphabet must be capital
-        fullAddr = fullAddr.charAt(0).toUpperCase() + fullAddr.slice(1);
+        // 5. Capitalize first letter of every word in full address
+        fullAddr = capitalizeWords(fullAddr);
 
         const formattedAddress = `${fullAddr}, ${pincode}`;
 
