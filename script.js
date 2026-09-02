@@ -70,12 +70,12 @@ document.addEventListener('DOMContentLoaded', () => {
         return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
     }
 
-    // SAVE SCROLL POSITION BEFORE REFRESH
+    // SAVE SCROLL POSITION BEFORE RELOAD/REFRESH
     window.addEventListener('beforeunload', () => {
         sessionStorage.setItem('scrollPosition', window.scrollY);
     });
 
-    // RESTORE PREVIOUS TAB AND SCROLL POSITION ON REFRESH
+    // RESTORE PREVIOUS TAB AND SCROLL POSITION SMOOTHLY ON RELOAD
     function restoreViewState() {
         renderAddressCards();
         updateAllUI();
@@ -93,7 +93,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const savedScroll = sessionStorage.getItem('scrollPosition');
         if (savedScroll) {
-            window.scrollTo(0, parseInt(savedScroll));
+            window.scrollTo({
+                top: parseInt(savedScroll),
+                behavior: 'smooth'
+            });
             sessionStorage.removeItem('scrollPosition');
         }
     }
