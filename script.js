@@ -56,6 +56,34 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // SAVE SCROLL POSITION BEFORE REFRESH
+    window.addEventListener('beforeunload', () => {
+        sessionStorage.setItem('scrollPosition', window.scrollY);
+    });
+
+    // RESTORE PREVIOUS TAB AND SCROLL POSITION ON REFRESH
+    function restoreViewState() {
+        renderAddressCards();
+        updateAllUI();
+
+        if (activeView === 'cart' && cart.length > 0) {
+            cartSlider.classList.add('open');
+            cartOverlay.classList.add('active');
+        } else if (activeView === 'address') {
+            addressSlider.classList.add('open');
+            cartOverlay.classList.add('active');
+        } else if (activeView === 'summary') {
+            orderConfirmModal.classList.add('active');
+        }
+        updateWhatsappVisibility();
+
+        const savedScroll = sessionStorage.getItem('scrollPosition');
+        if (savedScroll) {
+            window.scrollTo(0, parseInt(savedScroll));
+            sessionStorage.removeItem('scrollPosition');
+        }
+    }
+
     // Modal & UI Elements
     const orderConfirmModal = document.getElementById('order-confirm-modal');
     const closeConfirmBtn = document.getElementById('close-confirm-btn');
@@ -167,7 +195,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // 4. Capitalize first letter of every word in contact person's full name
+        // 4. Capitalize first letter of every word in full name
         contactPerson = capitalizeWords(contactPerson);
 
         // 5. Capitalize first letter of every word in full address
@@ -656,22 +684,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         cartTotalDiv.style.display = 'block';
-    }
-
-    function restoreViewState() {
-        renderAddressCards();
-        updateAllUI();
-
-        if (activeView === 'cart' && cart.length > 0) {
-            cartSlider.classList.add('open');
-            cartOverlay.classList.add('active');
-        } else if (activeView === 'address') {
-            addressSlider.classList.add('open');
-            cartOverlay.classList.add('active');
-        } else if (activeView === 'summary') {
-            orderConfirmModal.classList.add('active');
-        }
-        updateWhatsappVisibility();
     }
 
     restoreViewState();
