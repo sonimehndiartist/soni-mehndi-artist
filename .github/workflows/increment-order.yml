@@ -1,0 +1,56 @@
+name: Increment Order ID and Send Email
+
+on:
+  repository_dispatch:
+    types: [new-order]
+
+jobs:
+  update-counter:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+
+      - name: Increment Counter
+        id: step_increment
+        run: |
+          FILE="data/counter.json"
+          CURRENT=$(jq '.last_order_id' "$FILE")
+          NEW_ID=$((CURRENT + 1))
+          
+          # Update JSON file
+          jq ".last_order_id = $NEW_ID" "$FILE" > temp.json && mv temp.json "$FILE"
+          echo "new_id=$NEW_ID" >> $GITHUB_OUTPUT
+
+      - name: Commit Updated Counter
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "Auto-increment order ID to #${{ steps.step_increment.outputs.new_id }}"
+          file_pattern: 'data/counter.json'
+
+      - name: Send Email via FormSubmit
+        env:
+          ORDER_ID: "#${{ steps.step_increment.outputs.new_id }}"
+          CUSTOMER_NAME: "${{ github.event.client_payload.name }}"
+          MOBILE: "${{ github.event.client_payload.mobile }}"
+          ADDRESS: "${{ github.event.client_payload.address }}"
+          ITEMS: "${{ github.event.client_payload.items }}"
+          TOTAL: "${{ github.event.client_payload.total }}"
+        run: |
+          curl -X POST "https://formsubmit.co/ajax/sonimehndiartist@gmail.com" \
+            -H "Content-Type: application/json" \
+            -H "Accept: application/json" \
+            -d "{
+              \"_subject\": \"New Order $ORDER_ID - Soni Mehndi Artist\",
+              \"_template\": \"table\",
+              \"_captcha\": \"false\",
+              \"Order ID\": \"$ORDER_ID\",
+              \"Customer Name\": \"$CUSTOMER_NAME\",
+              \"Mobile Number\": \"$MOBILE\",
+              \"Delivery Address\": \"$ADDRESS\",
+              \"Ordered Items\": \"$ITEMS\",
+              \"Total Amount\": \"$TOTAL\",
+              \"Order Date\": \"$(date)\"
+            }"
